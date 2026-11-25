@@ -1,0 +1,758 @@
+{
+ "motion": "示例.motion.json",
+ "n": 12,
+ "model": "qwen3.8-flash",
+ "frames": [
+  0,
+  9,
+  14,
+  16,
+  17,
+  33,
+  34,
+  35,
+  50,
+  141,
+  146,
+  167
+ ],
+ "scoreFull": {
+  "handUpL": {
+   "acc": 0.9,
+   "n": 10,
+   "skipped": 2
+  },
+  "handUpR": {
+   "acc": 0.8,
+   "n": 10,
+   "skipped": 2
+  },
+  "elbowL": {
+   "acc": 0.8,
+   "n": 10,
+   "skipped": 2
+  },
+  "elbowR": {
+   "acc": 0.7,
+   "n": 10,
+   "skipped": 2
+  },
+  "facing": {
+   "acc": 0.909,
+   "n": 11,
+   "skipped": 1
+  },
+  "handNear": {
+   "acc": 0.2,
+   "n": 10,
+   "skipped": 2
+  },
+  "palmLabels": {
+   "n": 22,
+   "dist": {
+    "toward_body": 7,
+    "toward_camera": 2,
+    "not_visible": 10,
+    "unknown": 1,
+    "toward_other_hand": 2
+   }
+  }
+ },
+ "scoreCrop": {
+  "handUpL": {
+   "acc": 0.75,
+   "n": 12,
+   "skipped": 0
+  },
+  "handUpR": {
+   "acc": 0.917,
+   "n": 12,
+   "skipped": 0
+  },
+  "elbowL": {
+   "acc": 0.833,
+   "n": 12,
+   "skipped": 0
+  },
+  "elbowR": {
+   "acc": 0.636,
+   "n": 11,
+   "skipped": 1
+  },
+  "facing": {
+   "acc": 1.0,
+   "n": 12,
+   "skipped": 0
+  },
+  "handNear": {
+   "acc": 0.417,
+   "n": 12,
+   "skipped": 0
+  },
+  "palmLabels": {
+   "n": 24,
+   "dist": {
+    "not_visible": 4,
+    "unknown": 13,
+    "toward_body": 5,
+    "toward_camera": 2
+   }
+  }
+ },
+ "records": [
+  {
+   "frame": 0,
+   "t": 0.0,
+   "truth": {
+    "frame": 0,
+    "handUpL": true,
+    "handUpR": true,
+    "elbowL": "bent",
+    "elbowR": "bent",
+    "facing": "toward_camera",
+    "handNear": "left"
+   },
+   "cropBox": [
+    266,
+    456,
+    507,
+    952
+   ],
+   "full": {
+    "handUpL": "yes",
+    "handUpR": "yes",
+    "elbowL": "bent",
+    "elbowR": "bent",
+    "facing": "toward_camera",
+    "handNear": "same",
+    "palmL": "toward_body",
+    "palmR": "toward_body",
+    "action": "balancing on one leg while dancing"
+   },
+   "crop": {
+    "handUpL": "no",
+    "handUpR": "yes",
+    "elbowL": "bent",
+    "elbowR": "bent",
+    "facing": "toward_camera",
+    "handNear": "same",
+    "palmL": "not_visible",
+    "palmR": "not_visible",
+    "action": "Dancing with one leg raised"
+   },
+   "crop2": {
+    "handUpL": "yes",
+    "handUpR": "yes",
+    "elbowL": "bent",
+    "elbowR": "bent",
+    "facing": "toward_camera",
+    "handNear": "same",
+    "palmL": "toward_body",
+    "palmR": "toward_body",
+    "action": "jumping with arms raised"
+   }
+  },
+  {
+   "frame": 9,
+   "t": 0.375,
+   "truth": {
+    "frame": 9,
+    "handUpL": false,
+    "handUpR": true,
+    "elbowL": "bent",
+    "elbowR": "bent",
+    "facing": "toward_camera",
+    "handNear": "left"
+   },
+   "cropBox": [
+    148,
+    474,
+    579,
+    1057
+   ],
+   "full": {
+    "handUpL": "no",
+    "handUpR": "no",
+    "elbowL": "straight",
+    "elbowR": "straight",
+    "facing": "toward_camera",
+    "handNear": "same",
+    "palmL": "toward_camera",
+    "palmR": "toward_camera",
+    "action": "Dancing with arms extended to the sides"
+   },
+   "crop": {
+    "handUpL": "no",
+    "handUpR": "yes",
+    "elbowL": "straight",
+    "elbowR": "straight",
+    "facing": "toward_camera",
+    "handNear": "same",
+    "palmL": "unknown",
+    "palmR": "unknown",
+    "action": "spreading arms while dancing on stage"
+   },
+   "crop2": {
+    "handUpL": "no",
+    "handUpR": "no",
+    "elbowL": "straight",
+    "elbowR": "straight",
+    "facing": "toward_camera",
+    "handNear": "same",
+    "palmL": "unknown",
+    "palmR": "unknown",
+    "action": "dancing with arms extended sideways"
+   }
+  },
+  {
+   "frame": 14,
+   "t": 0.583,
+   "truth": {
+    "frame": 14,
+    "handUpL": false,
+    "handUpR": false,
+    "elbowL": "straight",
+    "elbowR": "bent",
+    "facing": "toward_camera",
+    "handNear": "left"
+   },
+   "cropBox": [
+    292,
+    444,
+    522,
+    1051
+   ],
+   "full": {
+    "handUpL": "no",
+    "handUpR": "no",
+    "elbowL": "straight",
+    "elbowR": "bent",
+    "facing": "toward_camera",
+    "handNear": "right",
+    "palmL": "toward_body",
+    "palmR": "not_visible",
+    "action": "Walking forward with right hand in pocket"
+   },
+   "crop": {
+    "handUpL": "no",
+    "handUpR": "no",
+    "elbowL": "straight",
+    "elbowR": "bent",
+    "facing": "toward_camera",
+    "handNear": "right",
+    "palmL": "unknown",
+    "palmR": "not_visible",
+    "action": "performing a dance move on stage"
+   },
+   "crop2": {
+    "handUpL": "no",
+    "handUpR": "no",
+    "elbowL": "bent",
+    "elbowR": "bent",
+    "facing": "toward_camera",
+    "handNear": "same",
+    "palmL": "not_visible",
+    "palmR": "not_visible",
+    "action": "walking forward on stage"
+   }
+  },
+  {
+   "frame": 16,
+   "t": 0.667,
+   "truth": {
+    "frame": 16,
+    "handUpL": false,
+    "handUpR": false,
+    "elbowL": "bent",
+    "elbowR": "straight",
+    "facing": "toward_camera",
+    "handNear": "right"
+   },
+   "cropBox": [
+    305,
+    384,
+    522,
+    1052
+   ],
+   "full": {
+    "handUpL": "no",
+    "handUpR": "no",
+    "elbowL": "straight",
+    "elbowR": "bent",
+    "facing": "toward_camera",
+    "handNear": "right",
+    "palmL": "not_visible",
+    "palmR": "not_visible",
+    "action": "dancing on stage"
+   },
+   "crop": {
+    "handUpL": "no",
+    "handUpR": "no",
+    "elbowL": "straight",
+    "elbowR": "bent",
+    "facing": "toward_camera",
+    "handNear": "right",
+    "palmL": "toward_body",
+    "palmR": "toward_body",
+    "action": "running toward camera on stage"
+   },
+   "crop2": {
+    "handUpL": "no",
+    "handUpR": "no",
+    "elbowL": "straight",
+    "elbowR": "bent",
+    "facing": "toward_camera",
+    "handNear": "left",
+    "palmL": "toward_body",
+    "palmR": "not_visible",
+    "action": "Walking forward toward the camera"
+   }
+  },
+  {
+   "frame": 17,
+   "t": 0.708,
+   "truth": {
+    "frame": 17,
+    "handUpL": false,
+    "handUpR": false,
+    "elbowL": "bent",
+    "elbowR": "bent",
+    "facing": "toward_camera",
+    "handNear": "right"
+   },
+   "cropBox": [
+    307,
+    351,
+    529,
+    1070
+   ],
+   "full": {
+    "handUpL": "no",
+    "handUpR": "no",
+    "elbowL": "bent",
+    "elbowR": "bent",
+    "facing": "toward_camera",
+    "handNear": "same",
+    "palmL": "toward_body",
+    "palmR": "toward_body",
+    "action": "Dancing with hands near waist and hair swinging"
+   },
+   "crop": {
+    "handUpL": "yes",
+    "handUpR": "no",
+    "elbowL": "bent",
+    "elbowR": "bent",
+    "facing": "toward_camera",
+    "handNear": "right",
+    "palmL": "unknown",
+    "palmR": "unknown",
+    "action": "dancing and flipping hair"
+   },
+   "crop2": {
+    "handUpL": "no",
+    "handUpR": "no",
+    "elbowL": "bent",
+    "elbowR": "bent",
+    "facing": "toward_camera",
+    "handNear": "same",
+    "palmL": "not_visible",
+    "palmR": "not_visible",
+    "action": "person dancing with hands near waist"
+   }
+  },
+  {
+   "frame": 33,
+   "t": 1.375,
+   "truth": {
+    "frame": 33,
+    "handUpL": true,
+    "handUpR": false,
+    "elbowL": "bent",
+    "elbowR": "bent",
+    "facing": "toward_camera",
+    "handNear": "right"
+   },
+   "cropBox": [
+    189,
+    316,
+    523,
+    1172
+   ],
+   "full": {
+    "handUpL": "yes",
+    "handUpR": "yes",
+    "elbowL": "bent",
+    "elbowR": "bent",
+    "facing": "toward_camera",
+    "handNear": "unknown",
+    "palmL": "not_visible",
+    "palmR": "not_visible",
+    "action": "crossing arms in front of chest"
+   },
+   "crop": {
+    "handUpL": "yes",
+    "handUpR": "no",
+    "elbowL": "bent",
+    "elbowR": "unknown",
+    "facing": "toward_camera",
+    "handNear": "left",
+    "palmL": "unknown",
+    "palmR": "not_visible",
+    "action": "dancing with left arm raised high"
+   },
+   "crop2": {
+    "handUpL": "yes",
+    "handUpR": "unknown",
+    "elbowL": "straight",
+    "elbowR": "unknown",
+    "facing": "toward_camera",
+    "handNear": "left",
+    "palmL": "unknown",
+    "palmR": "not_visible",
+    "action": "Dancing with left arm raised"
+   }
+  },
+  {
+   "frame": 34,
+   "t": 1.417,
+   "truth": {
+    "frame": 34,
+    "handUpL": true,
+    "handUpR": true,
+    "elbowL": "bent",
+    "elbowR": "bent",
+    "facing": "toward_camera",
+    "handNear": "right"
+   },
+   "cropBox": [
+    146,
+    310,
+    571,
+    1175
+   ],
+   "full": {
+    "handUpL": "yes",
+    "handUpR": "unknown",
+    "elbowL": "bent",
+    "elbowR": "unknown",
+    "facing": "toward_camera",
+    "handNear": "left",
+    "palmL": "unknown",
+    "palmR": "not_visible",
+    "action": "Dancing"
+   },
+   "crop": {
+    "handUpL": "yes",
+    "handUpR": "no",
+    "elbowL": "bent",
+    "elbowR": "bent",
+    "facing": "toward_camera",
+    "handNear": "left",
+    "palmL": "unknown",
+    "palmR": "unknown",
+    "action": "Dancing with sharp arm movements"
+   },
+   "crop2": {
+    "_error": "3 次尝试后仍失败 → HTTP 403 Forbidden"
+   }
+  },
+  {
+   "frame": 35,
+   "t": 1.458,
+   "truth": {
+    "frame": 35,
+    "handUpL": false,
+    "handUpR": true,
+    "elbowL": "bent",
+    "elbowR": "bent",
+    "facing": "toward_camera",
+    "handNear": "right"
+   },
+   "cropBox": [
+    116,
+    294,
+    608,
+    1179
+   ],
+   "full": {
+    "handUpL": "yes",
+    "handUpR": "yes",
+    "elbowL": "bent",
+    "elbowR": "bent",
+    "facing": "toward_camera",
+    "handNear": "left",
+    "palmL": "toward_body",
+    "palmR": "not_visible",
+    "action": "dancing, throwing hair and covering face"
+   },
+   "crop": {
+    "handUpL": "yes",
+    "handUpR": "yes",
+    "elbowL": "bent",
+    "elbowR": "bent",
+    "facing": "toward_camera",
+    "handNear": "right",
+    "palmL": "unknown",
+    "palmR": "unknown",
+    "action": "Dancing with arms raised near face"
+   },
+   "crop2": {
+    "handUpL": "yes",
+    "handUpR": "yes",
+    "elbowL": "bent",
+    "elbowR": "bent",
+    "facing": "toward_camera",
+    "handNear": "left",
+    "palmL": "toward_body",
+    "palmR": "sideways",
+    "action": "dancing with arms raised near face"
+   }
+  },
+  {
+   "frame": 50,
+   "t": 2.083,
+   "truth": {
+    "frame": 50,
+    "handUpL": true,
+    "handUpR": false,
+    "elbowL": "bent",
+    "elbowR": "straight",
+    "facing": "toward_camera",
+    "handNear": "right"
+   },
+   "cropBox": [
+    83,
+    345,
+    688,
+    1149
+   ],
+   "full": {
+    "_error": "3 次尝试后仍失败 → HTTP 403 Forbidden"
+   },
+   "crop": {
+    "handUpL": "yes",
+    "handUpR": "no",
+    "elbowL": "bent",
+    "elbowR": "bent",
+    "facing": "toward_camera",
+    "handNear": "right",
+    "palmL": "unknown",
+    "palmR": "unknown",
+    "action": "dancing, swinging arms across the chest"
+   },
+   "crop2": {
+    "handUpL": "no",
+    "handUpR": "no",
+    "elbowL": "bent",
+    "elbowR": "bent",
+    "facing": "toward_camera",
+    "handNear": "left",
+    "palmL": "toward_body",
+    "palmR": "not_visible",
+    "action": "dancing with arms crossed in front"
+   }
+  },
+  {
+   "frame": 141,
+   "t": 5.875,
+   "truth": {
+    "frame": 141,
+    "handUpL": false,
+    "handUpR": false,
+    "elbowL": "bent",
+    "elbowR": "bent",
+    "facing": "toward_camera",
+    "handNear": "left"
+   },
+   "cropBox": [
+    244,
+    301,
+    530,
+    1150
+   ],
+   "full": {
+    "handUpL": "no",
+    "handUpR": "no",
+    "elbowL": "bent",
+    "elbowR": "bent",
+    "facing": "toward_camera",
+    "handNear": "same",
+    "palmL": "toward_other_hand",
+    "palmR": "toward_other_hand",
+    "action": "dancing with arms bent and fists raised"
+   },
+   "crop": {
+    "handUpL": "no",
+    "handUpR": "no",
+    "elbowL": "bent",
+    "elbowR": "bent",
+    "facing": "toward_camera",
+    "handNear": "same",
+    "palmL": "toward_body",
+    "palmR": "toward_body",
+    "action": "Dancing with hands curled near chest"
+   },
+   "crop2": {
+    "handUpL": "no",
+    "handUpR": "no",
+    "elbowL": "bent",
+    "elbowR": "bent",
+    "facing": "toward_camera",
+    "handNear": "right",
+    "palmL": "toward_body",
+    "palmR": "toward_body",
+    "action": "dancing with hands bent up at chest"
+   }
+  },
+  {
+   "frame": 146,
+   "t": 6.083,
+   "truth": {
+    "frame": 146,
+    "handUpL": false,
+    "handUpR": false,
+    "elbowL": "bent",
+    "elbowR": "bent",
+    "facing": "side",
+    "handNear": "left"
+   },
+   "cropBox": [
+    145,
+    288,
+    493,
+    1179
+   ],
+   "full": {
+    "handUpL": "unknown",
+    "handUpR": "no",
+    "elbowL": "unknown",
+    "elbowR": "bent",
+    "facing": "away",
+    "handNear": "right",
+    "palmL": "not_visible",
+    "palmR": "toward_body",
+    "action": "Dancing on stage with leg lifted"
+   },
+   "crop": {
+    "handUpL": "no",
+    "handUpR": "no",
+    "elbowL": "bent",
+    "elbowR": "bent",
+    "facing": "side",
+    "handNear": "right",
+    "palmL": "unknown",
+    "palmR": "toward_body",
+    "action": "dancing with arms bent in fists"
+   },
+   "crop2": {
+    "handUpL": "no",
+    "handUpR": "no",
+    "elbowL": "bent",
+    "elbowR": "bent",
+    "facing": "side",
+    "handNear": "right",
+    "palmL": "unknown",
+    "palmR": "toward_body",
+    "action": "dancing in profile with bent arms and stride"
+   }
+  },
+  {
+   "frame": 167,
+   "t": 6.958,
+   "truth": {
+    "frame": 167,
+    "handUpL": false,
+    "handUpR": false,
+    "elbowL": "bent",
+    "elbowR": "straight",
+    "facing": "toward_camera",
+    "handNear": "left"
+   },
+   "cropBox": [
+    254,
+    306,
+    484,
+    1167
+   ],
+   "full": {
+    "handUpL": "no",
+    "handUpR": "no",
+    "elbowL": "bent",
+    "elbowR": "bent",
+    "facing": "toward_camera",
+    "handNear": "left",
+    "palmL": "not_visible",
+    "palmR": "not_visible",
+    "action": "dancing with hands near waist"
+   },
+   "crop": {
+    "handUpL": "no",
+    "handUpR": "no",
+    "elbowL": "bent",
+    "elbowR": "bent",
+    "facing": "toward_camera",
+    "handNear": "left",
+    "palmL": "toward_camera",
+    "palmR": "toward_camera",
+    "action": "dancing with bent arms at waist"
+   },
+   "crop2": {
+    "handUpL": "no",
+    "handUpR": "no",
+    "elbowL": "bent",
+    "elbowR": "bent",
+    "facing": "toward_camera",
+    "handNear": "left",
+    "palmL": "toward_body",
+    "palmR": "toward_body",
+    "action": "dancing with hands held near waist"
+   }
+  }
+ ],
+ "scoreCropRepeat": {
+  "handUpL": {
+   "acc": 0.818,
+   "n": 11,
+   "skipped": 1
+  },
+  "handUpR": {
+   "acc": 0.9,
+   "n": 10,
+   "skipped": 2
+  },
+  "elbowL": {
+   "acc": 0.636,
+   "n": 11,
+   "skipped": 1
+  },
+  "elbowR": {
+   "acc": 0.6,
+   "n": 10,
+   "skipped": 2
+  },
+  "facing": {
+   "acc": 1.0,
+   "n": 11,
+   "skipped": 1
+  },
+  "handNear": {
+   "acc": 0.091,
+   "n": 11,
+   "skipped": 1
+  },
+  "palmLabels": {
+   "n": 22,
+   "dist": {
+    "toward_body": 10,
+    "unknown": 4,
+    "not_visible": 7,
+    "sideways": 1
+   }
+  }
+ },
+ "repeatFlipRate": {
+  "rate": 0.348,
+  "n": 66
+ },
+ "conclusion": "**模型能做什么**（实测）：粗粒度空间关系可靠 —— 哪只手抬过肩（90%/80%）、\n肘是否弯曲（80%/70%）、人朝哪个方向（91%，主体裁剪图 100%）、动作短语（\"dancing, hands tucked\ninto sweater\" 与视频实际一致）。整帧图与主体裁剪图**各有优势**：抬臂/面向用整帧更稳，\n掌面判断用整帧更稳（裁剪图 13/24 回答 unknown）。\n\n**模型不能做什么**（实测）：\n1. **深度序不可靠**：判断哪只手更靠近镜头只有 20%（整帧）/ 42%（裁剪）—— 远低于随机猜测的可用水平。\n   → 深度重构**不得**依赖它；本项目的深度只由透视缩短 + 解剖先验 + 帧间连续性给出。\n2. **掌向不可靠**：同帧同题重复提问的标签翻转率 **34.8%**；且 10~13/22 的回答是\n   `not_visible` / `unknown`（表演者穿宽大连帽衫、手常在袖子里 → 掌面本就不可见）。\n   → 掌向**不由模型标注**，改用解剖先验驱动腕部扭转（模型标签仅作参考，不进渲染管线）。\n3. **不能做度量估计**：不给它任何需要\"数字\"的提问（角度、距离、像素）。\n\n**结论**：多模态模型在本管线里的角色是**语义标注器**（场景/动作/朝向），\n不是几何测量器。任何\"从 2D 猜 3D\"的量都不交给它。"
+}

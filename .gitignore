@@ -1,0 +1,17 @@
+# Python 虚拟环境与缓存
+tools/.venv/
+__pycache__/
+*.py[cod]
+
+# 下载的模型权重（由 tools/extract_motion.py 自动下载）
+tools/models/
+
+# 生成物：截图与临时产物
+screenshots/
+images/
+
+# 第三方参考源码（只读借鉴，不属于本项目）
+project-references/
+
+# 系统垃圾
+.DS_Store

@@ -1,0 +1,81 @@
+{
+ "act:0": {
+  "action": "dancing with one leg lifted",
+  "facing": "toward_camera",
+  "visible_hands": "both"
+ },
+ "act:24": {
+  "action": "performing a dance move",
+  "facing": "toward_camera",
+  "visible_hands": "none"
+ },
+ "act:48": {
+  "action": "dancing on stage",
+  "facing": "toward_camera",
+  "visible_hands": "none"
+ },
+ "act:72": {
+  "action": "dancing and whipping hair",
+  "facing": "toward_camera",
+  "visible_hands": "none"
+ },
+ "act:96": {
+  "action": "dancing with wide leg stance",
+  "facing": "toward_camera",
+  "visible_hands": "one"
+ },
+ "act:120": {
+  "action": "standing upright",
+  "facing": "toward_camera",
+  "visible_hands": "none"
+ },
+ "act:144": {
+  "action": "dancing on stage",
+  "facing": "side",
+  "visible_hands": "both"
+ },
+ "act:168": {
+  "action": "walking down the runway",
+  "facing": "toward_camera",
+  "visible_hands": "both"
+ },
+ "act:192": {
+  "action": "standing still on stage",
+  "facing": "toward_camera",
+  "visible_hands": "none"
+ },
+ "act:216": {
+  "action": "Dancing with arms swinging",
+  "facing": "toward_camera",
+  "visible_hands": "one"
+ },
+ "act:240": {
+  "action": "dancing, hands tucked into sweater",
+  "facing": "toward_camera",
+  "visible_hands": "none"
+ },
+ "act:264": {
+  "action": "dancing with legs spread wide",
+  "facing": "toward_camera",
+  "visible_hands": "both"
+ },
+ "act:288": {
+  "action": "dancing with wide leg stance",
+  "facing": "toward_camera",
+  "visible_hands": "one"
+ },
+ "act:312": {
+  "action": "dancing on stage",
+  "facing": "toward_camera",
+  "visible_hands": "one"
+ },
+ "act:336": {
+  "action": "dancing with legs spread apart",
+  "facing": "side",
+  "visible_hands": "none"
+ },
+ "scene": {
+  "scene": "A person wearing a black beanie, dark blue hoodie, light blue jeans, and white shoes is dancing on a brightly lit stage in front of a large audience.",
+  "facing": "front"
+ }
+}

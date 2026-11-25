@@ -1,0 +1,22 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>frames</title></head>
+<body style="margin:0;background:#000">
+<video id="v" crossorigin="anonymous" style="max-width:100%"></video>
+<canvas id="c"></canvas>
+<script>
+window.meta = null;
+const v = document.getElementById('v'), c = document.getElementById('c');
+v.src = new URLSearchParams(location.search).get('src');
+window.ready = new Promise(res => {
+  v.addEventListener('loadedmetadata', () => {
+    c.width = v.videoWidth; c.height = v.videoHeight;
+    window.meta = {duration: v.duration, w: v.videoWidth, h: v.videoHeight};
+    res(window.meta);
+  });
+  v.addEventListener('error', () => res({error: String(v.error && v.error.message)}));
+});
+window.grab = t => new Promise(res => {
+  const on = () => { v.removeEventListener('seeked', on); c.getContext('2d').drawImage(v,0,0); res(c.toDataURL('image/png')); };
+  v.addEventListener('seeked', on);
+  v.currentTime = t;
+});
+</script></body></html>

@@ -1,0 +1,583 @@
+{
+ "r16z:2.5:video": {
+  "handHigher": "left",
+  "elbowBent": "one",
+  "palmFacing": "not_visible",
+  "facing": "toward_camera",
+  "action": "Dancing on stage one arm raised"
+ },
+ "r16z:2.5:render": {
+  "handHigher": "left",
+  "elbowBent": "both",
+  "palmFacing": "toward_camera",
+  "facing": "toward_camera",
+  "action": "dancing with hands raised"
+ },
+ "r16z:7.21:video": {
+  "handHigher": "left",
+  "elbowBent": "both",
+  "palmFacing": "toward_body",
+  "facing": "toward_camera",
+  "action": "dancing on stage"
+ },
+ "r16z:7.21:render": {
+  "handHigher": "left",
+  "elbowBent": "one",
+  "palmFacing": "toward_body",
+  "facing": "toward_camera",
+  "action": "standing with hand near waist"
+ },
+ "r16z:10.0:video": {
+  "handHigher": "same",
+  "elbowBent": "both",
+  "palmFacing": "toward_body",
+  "facing": "toward_camera",
+  "action": "dancing while making thumbs up gestures"
+ },
+ "r16z:10.0:render": {
+  "handHigher": "same",
+  "elbowBent": "both",
+  "palmFacing": "not_visible",
+  "facing": "toward_camera",
+  "action": "standing with hands behind head"
+ },
+ "r16z:14.0:render": {
+  "handHigher": "right",
+  "elbowBent": "both",
+  "palmFacing": "toward_body",
+  "facing": "toward_camera",
+  "action": "posing with hands on waist"
+ },
+ "r18:2.5:video": {
+  "handHigher": "left",
+  "elbowBent": "both",
+  "palmFacing": "not_visible",
+  "facing": "toward_camera",
+  "action": "dancing on a stage"
+ },
+ "r18:2.5:render": {
+  "handHigher": "right",
+  "elbowBent": "both",
+  "palmFacing": "toward_camera",
+  "facing": "toward_camera",
+  "action": "jumping while singing into microphone"
+ },
+ "r18:7.21:video": {
+  "handHigher": "right",
+  "elbowBent": "both",
+  "palmFacing": "not_visible",
+  "facing": "toward_camera",
+  "action": "Dancing on stage"
+ },
+ "r18:7.21:render": {
+  "handHigher": "same",
+  "elbowBent": "both",
+  "palmFacing": "toward_each_other",
+  "facing": "toward_camera",
+  "action": "standing with hands behind back"
+ },
+ "r18:10.0:video": {
+  "handHigher": "same",
+  "elbowBent": "both",
+  "palmFacing": "toward_body",
+  "facing": "toward_camera",
+  "action": "performing a dance move on stage"
+ },
+ "r18:10.0:render": {
+  "handHigher": "right",
+  "elbowBent": "one",
+  "palmFacing": "toward_body",
+  "facing": "toward_camera",
+  "action": "dancing with hand raised near face"
+ },
+ "r18:12.5:video": {
+  "handHigher": "left",
+  "elbowBent": "both",
+  "palmFacing": "toward_camera",
+  "facing": "toward_camera",
+  "action": "performing dance on stage"
+ },
+ "r18:12.5:render": {
+  "handHigher": "right",
+  "elbowBent": "both",
+  "palmFacing": "toward_camera",
+  "facing": "toward_camera",
+  "action": "dancing with arms raised"
+ },
+ "r28:2.5:video": {
+  "handHigher": "right",
+  "elbowBent": "one",
+  "palmFacing": "not_visible",
+  "facing": "toward_camera",
+  "action": "dancing on stage"
+ },
+ "r28:2.5:render": {
+  "handHigher": "right",
+  "elbowBent": "both",
+  "palmFacing": "toward_camera",
+  "facing": "toward_camera",
+  "action": "dancing while holding a microphone"
+ },
+ "r28:7.21:video": {
+  "handHigher": "left",
+  "elbowBent": "both",
+  "palmFacing": "toward_body",
+  "facing": "toward_camera",
+  "action": "dancing on stage"
+ },
+ "r28:7.21:render": {
+  "handHigher": "right",
+  "elbowBent": "both",
+  "palmFacing": "sideways",
+  "facing": "toward_camera",
+  "action": "Standing with one hand behind back"
+ },
+ "r28:10.0:video": {
+  "handHigher": "same",
+  "elbowBent": "both",
+  "palmFacing": "toward_body",
+  "facing": "toward_camera",
+  "action": "dancing with hands near chest"
+ },
+ "r28:10.0:render": {
+  "handHigher": "same",
+  "elbowBent": "both",
+  "palmFacing": "not_visible",
+  "facing": "toward_camera",
+  "action": "Posing with hands behind head"
+ },
+ "r28:12.5:video": {
+  "handHigher": "right",
+  "elbowBent": "both",
+  "palmFacing": "toward_camera",
+  "facing": "toward_camera",
+  "action": "performing a dance move on stage"
+ },
+ "r28:12.5:render": {
+  "handHigher": "left",
+  "elbowBent": "both",
+  "palmFacing": "toward_camera",
+  "facing": "toward_camera",
+  "action": "dancing with raised hands"
+ },
+ "r28:51c2248a:2.5:video": {
+  "handHigher": "right",
+  "elbowBent": "one",
+  "palmFacing": "not_visible",
+  "facing": "toward_camera",
+  "action": "dancing on stage"
+ },
+ "r28:51c2248a:2.5:render": {
+  "handHigher": "left",
+  "elbowBent": "both",
+  "palmFacing": "toward_camera",
+  "facing": "toward_camera",
+  "action": "dancing with arms raised"
+ },
+ "r28:51c2248a:7.21:video": {
+  "handHigher": "right",
+  "elbowBent": "both",
+  "palmFacing": "toward_body",
+  "facing": "toward_camera",
+  "action": "dancing on a stage"
+ },
+ "r28:51c2248a:7.21:render": {
+  "handHigher": "left",
+  "elbowBent": "both",
+  "palmFacing": "not_visible",
+  "facing": "toward_camera",
+  "action": "dancing"
+ },
+ "r28:51c2248a:10.0:video": {
+  "handHigher": "left",
+  "elbowBent": "both",
+  "palmFacing": "toward_body",
+  "facing": "toward_camera",
+  "action": "Dancing with hands near chest"
+ },
+ "r28:51c2248a:10.0:render": {
+  "handHigher": "same",
+  "elbowBent": "both",
+  "palmFacing": "toward_body",
+  "facing": "toward_camera",
+  "action": "dancing with hands raised near shoulders"
+ },
+ "r28:51c2248a:12.5:video": {
+  "handHigher": "right",
+  "elbowBent": "both",
+  "palmFacing": "away_from_camera",
+  "facing": "toward_camera",
+  "action": "dancing on stage"
+ },
+ "r28:51c2248a:12.5:render": {
+  "handHigher": "left",
+  "elbowBent": "both",
+  "palmFacing": "toward_camera",
+  "facing": "toward_camera",
+  "action": "dancing with arms out"
+ },
+ "r28:6d57137e:2.5:video": {
+  "bodyLean": "upright",
+  "elbowBent": "one",
+  "palmFacing": "not_visible",
+  "facing": "toward_camera",
+  "action": "dancing on stage"
+ },
+ "r28:6d57137e:2.5:render": {
+  "bodyLean": "upright",
+  "elbowBent": "both",
+  "palmFacing": "toward_camera",
+  "facing": "toward_camera",
+  "action": "dancing with arms raised"
+ },
+ "r28:6d57137e:7.21:video": {
+  "bodyLean": "upright",
+  "elbowBent": "both",
+  "palmFacing": "toward_body",
+  "facing": "toward_camera",
+  "action": "dancing on stage"
+ },
+ "r28:6d57137e:7.21:render": {
+  "bodyLean": "upright",
+  "elbowBent": "both",
+  "palmFacing": "toward_body",
+  "facing": "toward_camera",
+  "action": "posing with legs apart"
+ },
+ "r28:6d57137e:10.0:video": {
+  "bodyLean": "upright",
+  "elbowBent": "both",
+  "palmFacing": "toward_body",
+  "facing": "toward_camera",
+  "action": "dancing on stage"
+ },
+ "r28:6d57137e:10.0:render": {
+  "bodyLean": "upright",
+  "elbowBent": "both",
+  "palmFacing": "toward_body",
+  "facing": "toward_camera",
+  "action": "Dancing with hands near neck"
+ },
+ "r28:6d57137e:12.5:video": {
+  "bodyLean": "left",
+  "elbowBent": "both",
+  "palmFacing": "toward_camera",
+  "facing": "toward_camera",
+  "action": "dancing on stage"
+ },
+ "r28:6d57137e:12.5:render": {
+  "bodyLean": "upright",
+  "elbowBent": "both",
+  "palmFacing": "toward_camera",
+  "facing": "toward_camera",
+  "action": "dancing"
+ },
+ "r18:6d57137e:2.5:video": {
+  "bodyLean": "right",
+  "elbowBent": "one",
+  "palmFacing": "not_visible",
+  "facing": "toward_camera",
+  "action": "dancing on a stage"
+ },
+ "r18:6d57137e:2.5:render": {
+  "bodyLean": "upright",
+  "elbowBent": "both",
+  "palmFacing": "toward_camera",
+  "facing": "toward_camera",
+  "action": "jumping with arms raised"
+ },
+ "r18:6d57137e:7.21:video": {
+  "bodyLean": "upright",
+  "elbowBent": "both",
+  "palmFacing": "not_visible",
+  "facing": "toward_camera",
+  "action": "dancing on stage"
+ },
+ "r18:6d57137e:7.21:render": {
+  "bodyLean": "upright",
+  "elbowBent": "one",
+  "palmFacing": "toward_body",
+  "facing": "toward_camera",
+  "action": "jumping in mid-air"
+ },
+ "r18:6d57137e:10.0:video": {
+  "bodyLean": "upright",
+  "elbowBent": "both",
+  "palmFacing": "toward_body",
+  "facing": "toward_camera",
+  "action": "Dancing on stage with hands raised"
+ },
+ "r18:6d57137e:10.0:render": {
+  "bodyLean": "upright",
+  "elbowBent": "both",
+  "palmFacing": "toward_body",
+  "facing": "toward_camera",
+  "action": "hands raised to neck"
+ },
+ "r18:6d57137e:12.5:video": {
+  "bodyLean": "upright",
+  "elbowBent": "both",
+  "palmFacing": "toward_camera",
+  "facing": "toward_camera",
+  "action": "dancing on stage"
+ },
+ "r18:6d57137e:12.5:render": {
+  "body": "unknown",
+  "elbowBent": "unknown",
+  "palmFacing": "unknown",
+  "facing": "unknown",
+  "action": "unknown"
+ },
+ "r18b:6d57137e:2.5:video": {
+  "bodyLean": "upright",
+  "elbowBent": "one",
+  "palmFacing": "not_visible",
+  "facing": "toward_camera",
+  "action": "dancing on a stage"
+ },
+ "r18b:6d57137e:2.5:render": {
+  "bodyLean": "upright",
+  "elbowBent": "both",
+  "palmFacing": "toward_camera",
+  "facing": "toward_camera",
+  "action": "dancing"
+ },
+ "r18b:6d57137e:7.21:video": {
+  "bodyLean": "upright",
+  "elbowBent": "both",
+  "palmFacing": "toward_body",
+  "facing": "toward_camera",
+  "action": "Dancing on stage"
+ },
+ "r18b:6d57137e:7.21:render": {
+  "bodyLean": "upright",
+  "elbowBent": "both",
+  "palmFacing": "toward_camera",
+  "facing": "toward_camera",
+  "action": "standing with legs spread apart"
+ },
+ "r18b:6d57137e:10.0:video": {
+  "bodyLean": "upright",
+  "elbowBent": "both",
+  "palmFacing": "toward_body",
+  "facing": "toward_camera",
+  "action": "dancing with hands near chest"
+ },
+ "r18b:6d57137e:10.0:render": {
+  "bodyLean": "upright",
+  "elbowBent": "both",
+  "palmFacing": "toward_each_other",
+  "facing": "toward_camera",
+  "action": "dancing with arms tucked in"
+ },
+ "r18b:6d57137e:12.5:video": {
+  "bodyLean": "upright",
+  "elbowBent": "both",
+  "palmFacing": "toward_camera",
+  "facing": "toward_camera",
+  "action": "dancing on stage"
+ },
+ "r18b:6d57137e:12.5:render": {
+  "bodyLean": "upright",
+  "elbowBent": "both",
+  "palmFacing": "toward_camera",
+  "facing": "toward_camera",
+  "action": "dancing with arms raised"
+ },
+ "r18:6d57137e:1.0:video": {
+  "bodyLean": "upright",
+  "elbowBent": "both",
+  "palmFacing": "toward_body",
+  "facing": "toward_camera",
+  "action": "dancing on stage covering face"
+ },
+ "r18:6d57137e:1.0:render": {
+  "bodyLean": "upright",
+  "elbowBent": "one",
+  "palmFacing": "toward_body",
+  "facing": "toward_camera",
+  "action": "posing with hand near face"
+ },
+ "r18:6d57137e:4.0:video": {
+  "bodyLean": "upright",
+  "elbowBent": "both",
+  "palmFacing": "toward_body",
+  "facing": "toward_camera",
+  "action": "Dancing on a stage"
+ },
+ "r18:6d57137e:4.0:render": {
+  "bodyLean": "upright",
+  "elbowBent": "one",
+  "palmFacing": "toward_camera",
+  "facing": "toward_camera",
+  "action": "dancing with one hand behind back"
+ },
+ "r18:6d57137e:5.0:video": {
+  "bodyLean": "upright",
+  "elbowBent": "both",
+  "palmFacing": "not_visible",
+  "facing": "toward_camera",
+  "action": "standing with arms raised"
+ },
+ "r18:6d57137e:5.0:render": {
+  "bodyLean": "upright",
+  "elbowBent": "both",
+  "palmFacing": "sideways",
+  "facing": "toward_camera",
+  "action": "dancing"
+ },
+ "r18:6d57137e:6.5:video": {
+  "bodyLean": "right",
+  "elbowBent": "both",
+  "palmFacing": "not_visible",
+  "facing": "side",
+  "action": "dancing with hands on head"
+ },
+ "r18:6d57137e:6.5:render": {
+  "bodyLean": "upright",
+  "elbowBent": "both",
+  "palmFacing": "away_from_camera",
+  "facing": "away",
+  "action": "dancing with arms raised"
+ },
+ "r18:6d57137e:14.0:video": {
+  "bodyLean": "upright",
+  "elbowBent": "both",
+  "palmFacing": "not_visible",
+  "facing": "toward_camera",
+  "action": "dancing on stage"
+ },
+ "r18:6d57137e:14.0:render": {
+  "bodyLean": "left",
+  "elbowBent": "both",
+  "palmFacing": "toward_body",
+  "facing": "toward_camera",
+  "action": "arms crossed in front of chest"
+ },
+ "r19:6d57137e:1.0:video": {
+  "bodyLean": "upright",
+  "elbowBent": "both",
+  "palmFacing": "toward_body",
+  "facing": "toward_camera",
+  "action": "dancing on stage"
+ },
+ "r19:6d57137e:1.0:render": {
+  "bodyLean": "upright",
+  "elbowBent": "one",
+  "palmFacing": "toward_body",
+  "facing": "toward_camera",
+  "action": "dancing with hand raised to head"
+ },
+ "r19:6d57137e:2.5:video": {
+  "bodyLean": "upright",
+  "elbowBent": "one",
+  "palmFacing": "not_visible",
+  "facing": "toward_camera",
+  "action": "dancing on stage"
+ },
+ "r19:6d57137e:2.5:render": {
+  "bodyLean": "upright",
+  "elbowBent": "both",
+  "palmFacing": "toward_camera",
+  "facing": "toward_camera",
+  "action": "dancing with hands raised"
+ },
+ "r19:6d57137e:4.0:video": {
+  "bodyLean": "upright",
+  "elbowBent": "both",
+  "palmFacing": "toward_body",
+  "facing": "toward_camera",
+  "action": "dancing on stage"
+ },
+ "r19:6d57137e:4.0:render": {
+  "bodyLean": "upright",
+  "elbowBent": "one",
+  "palmFacing": "toward_body",
+  "facing": "toward_camera",
+  "action": "posing with one hand behind back"
+ },
+ "r19:6d57137e:5.0:video": {
+  "bodyLean": "upright",
+  "elbowBent": "both",
+  "palmFacing": "toward_each_other",
+  "facing": "toward_camera",
+  "action": "standing and gesturing on stage"
+ },
+ "r19:6d57137e:5.0:render": {
+  "bodyLean": "upright",
+  "elbowBent": "both",
+  "palmFacing": "not_visible",
+  "facing": "toward_camera",
+  "action": "dancing"
+ },
+ "r19:6d57137e:6.5:video": {
+  "bodyLean": "left",
+  "elbowBent": "both",
+  "palmFacing": "not_visible",
+  "facing": "side",
+  "action": "dancing on a stage"
+ },
+ "r19:6d57137e:6.5:render": {
+  "bodyLean": "upright",
+  "elbowBent": "both",
+  "palmFacing": "away_from_camera",
+  "facing": "away",
+  "action": "dancing with arms extended forward"
+ },
+ "r19:6d57137e:7.21:video": {
+  "bodyLean": "left",
+  "elbowBent": "both",
+  "palmFacing": "toward_body",
+  "facing": "toward_camera",
+  "action": "dancing on a stage"
+ },
+ "r19:6d57137e:7.21:render": {
+  "bodyLean": "upright",
+  "elbowBent": "one",
+  "palmFacing": "toward_body",
+  "facing": "toward_camera",
+  "action": "standing with legs apart"
+ },
+ "r19:6d57137e:10.0:video": {
+  "bodyLean": "upright",
+  "elbowBent": "both",
+  "palmFacing": "toward_body",
+  "facing": "toward_camera",
+  "action": "pointing to herself while dancing"
+ },
+ "r19:6d57137e:10.0:render": {
+  "bodyLean": "upright",
+  "elbowBent": "both",
+  "palmFacing": "not_visible",
+  "facing": "toward_camera",
+  "action": "Standing with hands behind back"
+ },
+ "r19:6d57137e:12.5:video": {
+  "bodyLean": "upright",
+  "elbowBent": "both",
+  "palmFacing": "toward_each_other",
+  "facing": "toward_camera",
+  "action": "dancing"
+ },
+ "r19:6d57137e:12.5:render": {
+  "bodyLean": "upright",
+  "elbowBent": "both",
+  "palmFacing": "toward_camera",
+  "facing": "toward_camera",
+  "action": "dancing"
+ },
+ "r19:6d57137e:14.0:video": {
+  "bodyLean": "left",
+  "elbowBent": "both",
+  "palmFacing": "toward_body",
+  "facing": "toward_camera",
+  "action": "dancing on a stage"
+ },
+ "r19:6d57137e:14.0:render": {
+  "bodyLean": "upright",
+  "elbowBent": "both",
+  "palmFacing": "toward_each_other",
+  "facing": "toward_camera",
+  "action": "dancing"
+ }
+}
