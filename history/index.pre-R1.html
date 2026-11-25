@@ -1,0 +1,1968 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="通用视频行为轨迹 3D 查看器：按 Fact sheet schema v1 语义还原镜头与场景，下拉选择 JSON 规格，播放并与源视频并排对照，可模仿源视频逐帧姿态。">
+<link rel="icon" href="data:,">
+<title>行为轨迹 3D 查看器</title>
+<style>
+:root{
+  --bg:#07080d;
+  --panel:rgba(14,16,23,.72);
+  --panel-2:rgba(20,23,32,.86);
+  --solid:#10131b;
+  --line:rgba(255,255,255,.08);
+  --line-2:rgba(255,255,255,.16);
+  --text:#edf0f6;
+  --dim:#98a1b3;
+  --faint:#5c6474;
+  --accent:#e8b45c;
+  --accent-ink:#1c1204;
+  --accent-soft:rgba(232,180,92,.14);
+  --cool:#7dd3fc;
+  --cool-soft:rgba(125,211,252,.13);
+  --violet:#b388ff;
+  --danger:#ff6b6b;
+  --ok:#69d58c;
+  --sp-1:4px;--sp-2:8px;--sp-3:12px;--sp-4:16px;--sp-5:24px;--sp-6:32px;
+  --r-xs:6px;--r-sm:10px;--r-md:14px;--r-lg:20px;--r-full:999px;
+  --fs-xs:10px;--fs-sm:11px;--fs-md:12.5px;--fs-lg:14px;
+  --glass:blur(22px) saturate(1.5);
+  --shadow:0 18px 50px rgba(0,0,0,.5);
+  --ease:cubic-bezier(.22,.8,.28,1);
+}
+*,*::before,*::after{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0;overflow:hidden;background:var(--bg);color:var(--text);
+  font:400 var(--fs-md)/1.55 system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+::selection{background:var(--accent-soft)}
+
+#viewport{position:absolute;inset:0;overflow:hidden;background:
+  radial-gradient(120% 90% at 50% 0%, #0b0e18 0%, #07080d 55%, #05060a 100%)}
+#viewport canvas{display:block;width:100%;height:100%}
+
+/* ---------- 玻璃面板基类 ---------- */
+.glass{
+  background:var(--panel);
+  backdrop-filter:var(--glass);
+  -webkit-backdrop-filter:var(--glass);
+  border:1px solid var(--line);
+  box-shadow:var(--shadow);
+}
+
+/* ---------- 顶栏 ---------- */
+#topbar{
+  position:fixed;top:var(--sp-3);left:50%;transform:translateX(-50%);
+  z-index:30;display:flex;align-items:center;gap:var(--sp-3);
+  height:52px;padding:0 var(--sp-3) 0 var(--sp-4);
+  border-radius:var(--r-full);min-width:0;
+}
+.brand{display:flex;align-items:center;gap:var(--sp-3);min-width:0}
+.brand-mark{
+  width:28px;height:28px;border-radius:9px;flex:none;
+  background:linear-gradient(135deg,#f2ca88,#c98f3a);
+  display:grid;place-items:center;color:#231604;
+}
+.brand-text{display:flex;flex-direction:column;line-height:1.15;min-width:0;margin:0}
+.brand-text b{
+  font:600 14px/1.2 ui-serif,Georgia,"Songti SC",serif;letter-spacing:.02em;white-space:nowrap;
+}
+.brand-text span{
+  font-size:var(--fs-xs);color:var(--faint);letter-spacing:.16em;text-transform:uppercase;white-space:nowrap;
+}
+.spec-chip{
+  display:inline-flex;align-items:center;gap:var(--sp-2);
+  height:30px;padding:0 var(--sp-3);border-radius:var(--r-full);
+  background:var(--cool-soft);border:1px solid rgba(125,211,252,.25);
+  color:var(--cool);font-size:var(--fs-sm);max-width:220px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.spec-chip::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--cool);flex:none}
+.top-spacer{flex:1}
+#perfInfo{
+  font-size:var(--fs-sm);color:var(--dim);white-space:nowrap;
+  font-variant-numeric:tabular-nums;padding:6px var(--sp-3);border-radius:var(--r-full);
+  background:rgba(255,255,255,.04);border:1px solid var(--line);
+}
+#perfInfo b{color:var(--text);font-weight:600}
+#railBtn{display:none}
+
+/* ---------- 左轨 ---------- */
+#hud{
+  position:fixed;top:84px;left:var(--sp-3);bottom:100px;z-index:20;
+  width:296px;border-radius:var(--r-lg);padding:var(--sp-2);
+  overflow:auto;overscroll-behavior:contain;
+  scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.14) transparent;
+}
+#hud::-webkit-scrollbar{width:4px}
+#hud::-webkit-scrollbar-thumb{background:rgba(255,255,255,.14);border-radius:4px}
+#hud section{padding:var(--sp-3) var(--sp-2) var(--sp-4);border-bottom:1px solid var(--line)}
+#hud section:last-child{border-bottom:none}
+#hud h2{
+  margin:0 0 var(--sp-3);font-size:var(--fs-xs);font-weight:600;color:var(--faint);
+  letter-spacing:.18em;text-transform:uppercase;display:flex;align-items:center;gap:var(--sp-2);
+}
+#hud h2::after{content:"";flex:1;height:1px;background:var(--line)}
+label.field{display:block;font-size:var(--fs-sm);color:var(--dim);margin-bottom:var(--sp-3)}
+select,input[type=text]{
+  width:100%;margin-top:var(--sp-1);padding:8px var(--sp-2);
+  font:inherit;font-size:var(--fs-md);color:var(--text);
+  background:var(--solid);border:1px solid var(--line);border-radius:var(--r-xs);
+  appearance:none;
+}
+select:focus-visible,input:focus-visible,button:focus-visible,summary:focus-visible,[tabindex]:focus-visible{
+  outline:2px solid var(--accent);outline-offset:2px;
+}
+.btn-row{display:flex;gap:var(--sp-2)}
+button{
+  font:inherit;font-size:var(--fs-md);color:var(--text);cursor:pointer;
+  background:var(--solid);border:1px solid var(--line);border-radius:var(--r-xs);
+  padding:8px var(--sp-3);white-space:nowrap;transition:border-color .15s var(--ease),background .15s var(--ease),transform .12s var(--ease);
+}
+button:hover{border-color:var(--line-2);background:rgba(255,255,255,.06)}
+button:active{transform:translateY(1px)}
+button.ghost{background:transparent}
+.meta{margin:var(--sp-2) 0 0;font-size:var(--fs-sm);color:var(--dim);line-height:1.75}
+.meta b{color:var(--text);font-weight:600}
+
+.seg{display:flex;gap:var(--sp-1);padding:var(--sp-1);background:rgba(0,0,0,.28);border-radius:var(--r-sm)}
+.seg button{flex:1;border:none;background:transparent;color:var(--dim);border-radius:var(--r-xs);padding:8px 2px;font-size:var(--fs-sm)}
+.seg button[aria-pressed="true"]{background:var(--panel-2);color:var(--text);box-shadow:0 1px 8px rgba(0,0,0,.35),inset 0 0 0 1px var(--line-2)}
+
+input[type=range]{width:100%;accent-color:var(--accent);cursor:pointer}
+
+.chips{display:flex;flex-wrap:wrap;gap:var(--sp-2)}
+.chip{
+  display:inline-flex;align-items:center;gap:8px;height:28px;padding:0 var(--sp-3);
+  border-radius:var(--r-full);border:1px solid var(--line);
+  background:rgba(255,255,255,.03);color:var(--dim);font-size:var(--fs-sm);
+  cursor:pointer;user-select:none;transition:all .15s var(--ease);
+}
+.chip::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--faint);transition:background .15s}
+.chip:has(input:checked){color:var(--text);border-color:rgba(232,180,92,.4);background:var(--accent-soft)}
+.chip:has(input:checked)::before{background:var(--accent)}
+.chip input{position:absolute;opacity:0;pointer-events:none}
+
+.provenance{font-size:var(--fs-sm);color:var(--dim);line-height:1.8}
+.provenance b{color:var(--violet);font-weight:600}
+#events{font-size:var(--fs-sm);color:var(--dim);max-height:130px;overflow:auto}
+#events div{margin-top:var(--sp-1)}
+#events b{color:var(--accent);font-weight:600;font-variant-numeric:tabular-nums}
+
+/* ---------- 右检查器 ---------- */
+#inspector{
+  position:fixed;top:84px;right:var(--sp-3);z-index:20;width:264px;
+  border-radius:var(--r-lg);padding:var(--sp-2);display:flex;flex-direction:column;gap:var(--sp-2);
+  max-height:calc(100vh - 190px);
+}
+#inspector section{padding:var(--sp-2);border-radius:var(--r-md);background:rgba(0,0,0,.22);border:1px solid var(--line)}
+#inspector[hidden]{display:none}
+.vhead{
+  display:flex;align-items:center;gap:8px;margin:0 0 var(--sp-2);
+  font-size:var(--fs-xs);font-weight:600;color:var(--faint);
+  letter-spacing:.16em;text-transform:uppercase;
+}
+.live-dot{width:6px;height:6px;border-radius:50%;background:var(--ok);box-shadow:0 0 8px var(--ok)}
+#vidwrap[hidden]{display:none}
+#vid{
+  width:100%;max-height:40vh;object-fit:contain;border-radius:var(--r-sm);
+  background:#000;display:block;
+}
+#vidSel{margin-top:var(--sp-2)}
+.vhint{font-size:var(--fs-sm);color:var(--faint);margin:var(--sp-2) 0 0}
+#mapwrap[hidden]{display:none}
+#minimap{width:100%;aspect-ratio:1;border-radius:var(--r-sm);background:rgba(0,0,0,.35);border:1px solid var(--line);display:block}
+
+/* ---------- 走带控制 ---------- */
+#transport{
+  position:fixed;left:50%;bottom:var(--sp-4);transform:translateX(-50%);z-index:30;
+  display:flex;align-items:center;gap:var(--sp-3);
+  min-width:min(920px,calc(100vw - 48px));max-width:calc(100vw - 32px);
+  height:72px;padding:0 var(--sp-4);border-radius:var(--r-lg);
+}
+#playBtn{
+  width:46px;height:46px;border-radius:50%;flex:none;
+  background:linear-gradient(160deg,#f4cd8b,#d9a049);color:var(--accent-ink);
+  border:none;display:grid;place-items:center;
+  box-shadow:0 6px 22px rgba(232,180,92,.32),inset 0 1px 0 rgba(255,255,255,.5);
+  transition:transform .15s var(--ease),box-shadow .15s var(--ease);
+}
+#playBtn:hover{transform:scale(1.05);box-shadow:0 8px 28px rgba(232,180,92,.45),inset 0 1px 0 rgba(255,255,255,.5)}
+#playBtn:active{transform:scale(.97)}
+#playBtn svg{width:18px;height:18px}
+.time{
+  display:flex;align-items:baseline;gap:4px;flex:none;
+  font-variant-numeric:tabular-nums;font-size:var(--fs-sm);color:var(--faint);
+}
+.time b{font-size:var(--fs-lg);color:var(--text);font-weight:600;min-width:44px;text-align:right}
+#timeSlider{flex:1;min-width:120px;height:22px}
+#speedSel{width:76px;flex:none;margin-top:0}
+.tp-div{width:1px;height:36px;background:var(--line);flex:none}
+#mimicBtn{
+  flex:none;display:inline-flex;align-items:center;gap:8px;height:38px;padding:0 var(--sp-4);
+  border-radius:var(--r-full);font-size:var(--fs-md);color:var(--dim);
+  border:1px solid var(--line);background:rgba(255,255,255,.03);
+}
+#mimicBtn::before{
+  content:"";width:8px;height:8px;border-radius:50%;
+  background:var(--faint);box-shadow:none;transition:all .18s var(--ease);
+}
+#mimicBtn[aria-pressed="true"]{
+  color:var(--accent);border-color:rgba(232,180,92,.5);background:var(--accent-soft);
+}
+#mimicBtn[aria-pressed="true"]::before{background:var(--accent);box-shadow:0 0 10px var(--accent)}
+#mimicBtn:disabled{opacity:.45;cursor:not-allowed}
+#mimicBtn .m-arrow{display:none}
+#mimicInfo{flex:none;font-size:var(--fs-sm);color:var(--faint);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* ---------- 取景信息浮签 ---------- */
+#framingInfo{
+  position:fixed;top:84px;left:50%;transform:translateX(-50%);z-index:15;
+  margin:0;padding:6px var(--sp-4);border-radius:var(--r-full);
+  font-size:var(--fs-sm);color:var(--dim);background:var(--panel);
+  backdrop-filter:var(--glass);-webkit-backdrop-filter:var(--glass);
+  border:1px solid var(--line);white-space:nowrap;
+  font-variant-numeric:tabular-nums;
+}
+#framingInfo b{color:var(--text);font-weight:600}
+#framingInfo:empty{display:none}
+
+/* ---------- 横幅与错误 ---------- */
+#banner{
+  position:fixed;left:50%;bottom:104px;transform:translateX(-50%);z-index:25;
+  padding:7px var(--sp-4);font-size:var(--fs-sm);color:var(--dim);
+  background:var(--panel);backdrop-filter:var(--glass);-webkit-backdrop-filter:var(--glass);
+  border:1px solid var(--line);border-radius:var(--r-full);margin:0;max-width:min(720px,90vw);
+  text-align:center;
+}
+#banner.hidden{display:none}
+
+#err{position:fixed;inset:0;display:grid;place-items:center;background:rgba(4,6,10,.78);z-index:60}
+#err[hidden]{display:none}
+.err-card{width:min(560px,92vw);padding:var(--sp-5);background:var(--solid);border:1px solid var(--danger);border-radius:var(--r-lg);box-shadow:var(--shadow)}
+.err-card h2{margin:0 0 var(--sp-3);font-size:var(--fs-lg);color:var(--danger)}
+.err-card p{margin:0 0 var(--sp-3);font-size:var(--fs-md);white-space:pre-wrap}
+.err-card details{margin-bottom:var(--sp-4);font-size:var(--fs-sm);color:var(--dim)}
+.err-card pre{overflow:auto;max-height:180px;padding:var(--sp-2);background:rgba(0,0,0,.4);border-radius:var(--r-xs);white-space:pre-wrap}
+.err-card .btn-row{justify-content:flex-end}
+
+/* ---------- 响应式 ---------- */
+@media (max-width:1180px){
+  #mimicInfo{display:none}
+}
+@media (max-width:960px){
+  #inspector{display:none}
+  #topbar{left:var(--sp-3);transform:none;width:calc(100vw - 24px)}
+  .top-spacer{flex:1}
+  #railBtn{display:grid}
+  #hud{
+    top:76px;left:0;bottom:0;width:min(320px,86vw);
+    border-radius:0 var(--r-lg) var(--r-lg) 0;
+    transform:translateX(-102%);transition:transform .26s var(--ease);
+    background:var(--panel-2);backdrop-filter:var(--glass);-webkit-backdrop-filter:var(--glass);
+  }
+  #hud.open{transform:none}
+  #transport{min-width:calc(100vw - 24px);gap:var(--sp-2);padding:0 var(--sp-3);height:64px}
+  #mimicBtn{padding:0 var(--sp-3)}
+  #mimicBtn .m-label{display:none}
+  #mimicBtn .m-arrow{display:inline}
+  .time span:nth-child(2),.time span:nth-child(3),.time span:nth-child(4){display:none}
+  #framingInfo{display:none}
+}
+.icon-btn{
+  width:34px;height:34px;border-radius:var(--r-sm);display:grid;place-items:center;
+  background:rgba(255,255,255,.05);border:1px solid var(--line);color:var(--dim);padding:0;
+}
+</style>
+<script>
+  window.__CDN = new URLSearchParams(location.search).get('cdn') === 'unpkg'
+    ? {three:'https://unpkg.com/three@0.164.1/build/three.module.js',addons:'https://unpkg.com/three@0.164.1/examples/jsm/'}
+    : {three:'https://cdn.jsdelivr.net/npm/three@0.164.1/build/three.module.js',addons:'https://cdn.jsdelivr.net/npm/three@0.164.1/examples/jsm/'};
+  document.write('<scr'+'ipt type="importmap">'+JSON.stringify({imports:{three:window.__CDN.three,'three/addons/':window.__CDN.addons}})+'</scr'+'ipt>');
+</script>
+</head>
+<body>
+<main id="viewport" aria-label="3D 轨迹视口"></main>
+
+<header id="topbar" class="glass" aria-label="顶栏">
+  <div class="brand">
+    <span class="brand-mark" aria-hidden="true">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20c4-1 6-4 6-9l3-7 2 3 4 1-3 3c0 6-4 9-12 9z"/></svg>
+    </span>
+    <h1 class="brand-text"><b>行为轨迹 3D</b><span>Trajectory Viewer</span></h1>
+  </div>
+  <span class="spec-chip" id="specChip">未载入</span>
+  <span class="top-spacer"></span>
+  <span id="perfInfo">—</span>
+  <button id="railBtn" class="icon-btn" aria-label="打开控制面板">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h10"/></svg>
+  </button>
+</header>
+
+<aside id="hud" class="glass rail" aria-label="控制面板">
+  <section>
+    <h2>数据</h2>
+    <label class="field" for="specSelect">规格 JSON
+      <select id="specSelect" aria-label="选择规格文件"></select>
+    </label>
+    <div class="btn-row">
+      <button id="pickBtn" title="从本地选择 JSON 文件">本地选择…</button>
+      <button id="urlBtn" class="ghost" title="按文件名或 URL 载入">按路径载入…</button>
+    </div>
+    <input type="file" id="fileInput" accept=".json,application/json" multiple hidden>
+    <p class="meta" id="meta">尚未载入规格</p>
+  </section>
+
+  <section>
+    <h2>镜头</h2>
+    <label class="field">视角</label>
+    <div class="seg" id="viewSeg" role="group" aria-label="镜头视角">
+      <button data-view="schema" aria-pressed="true">规格机位</button>
+      <button data-view="audience" aria-pressed="false">观众席</button>
+      <button data-view="top" aria-pressed="false">俯视</button>
+    </div>
+    <label class="field" for="aspectSel" style="margin-top:var(--sp-3)">画幅（决定 framing 比例）
+      <select id="aspectSel" aria-label="画幅">
+        <option value="viewport">视口</option>
+        <option value="9:16">9:16 竖屏</option>
+        <option value="16:9">16:9 横屏</option>
+        <option value="video">匹配源视频</option>
+      </select>
+    </label>
+    <label class="field" for="pitchAdj">俯仰微调 <span id="pitchVal">0°</span></label>
+    <input type="range" id="pitchAdj" min="-20" max="20" step="0.5" value="0" aria-label="俯仰微调">
+    <div class="btn-row" style="margin-top:var(--sp-3)">
+      <button id="alignBtn" class="ghost" title="按源视频测得的画面轴向对齐">对齐视频构图</button>
+    </div>
+  </section>
+
+  <section>
+    <h2>图层</h2>
+    <div class="chips">
+      <label class="chip"><input type="checkbox" id="tgTrail" checked>轨迹</label>
+      <label class="chip"><input type="checkbox" id="tgGhost" checked>残影</label>
+      <label class="chip"><input type="checkbox" id="tgSet" checked>布景</label>
+      <label class="chip"><input type="checkbox" id="tgMap" checked>小地图</label>
+      <label class="chip"><input type="checkbox" id="tgVideo" checked>视频对照</label>
+    </div>
+  </section>
+
+  <section>
+    <h2>数据归属</h2>
+    <p class="provenance" id="provText">
+      环境与轨迹来自 JSON（schema v1）；<b id="provPose">肢体姿态取自源视频帧</b>。
+    </p>
+  </section>
+
+  <section>
+    <h2>事件</h2>
+    <div id="events"></div>
+  </section>
+</aside>
+
+<aside id="inspector" class="glass" aria-label="对照面板">
+  <section id="vidwrap" aria-label="源视频对照">
+    <div class="vhead"><span class="live-dot"></span>源视频对照</div>
+    <video id="vid" controls playsinline preload="auto"></video>
+    <select id="vidSel" aria-label="源视频"></select>
+    <p class="vhint" id="vidHint">时间轴与 3D 联动</p>
+    <input type="file" id="vidInput" accept="video/*" hidden>
+  </section>
+  <section id="mapwrap" aria-label="轨迹小地图">
+    <div class="vhead">轨迹俯视图 · x / d</div>
+    <canvas id="minimap"></canvas>
+  </section>
+</aside>
+
+<p id="framingInfo" aria-live="off"></p>
+
+<footer id="transport" class="glass" aria-label="播放控制">
+  <button id="playBtn" class="primary" aria-pressed="false" aria-label="播放">
+    <svg id="icoPlay" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.5v13l11-6.5z"/></svg>
+    <svg id="icoPause" viewBox="0 0 24 24" fill="currentColor" style="display:none"><path d="M7 5h3.4v14H7zM13.6 5H17v14h-3.4z"/></svg>
+  </button>
+  <span class="time"><b id="tNow">0.00</b><span>/</span><span id="tDur">0.00</span><span>s</span></span>
+  <input type="range" id="timeSlider" min="0" max="1" step="0.01" value="0" aria-label="时间轴">
+  <select id="speedSel" aria-label="倍速">
+    <option value="0.5">0.5×</option><option value="1" selected>1×</option><option value="2">2×</option>
+  </select>
+  <span class="tp-div"></span>
+  <button id="mimicBtn" aria-pressed="false" title="用源视频逐帧姿态驱动 3D 人偶">
+    <span class="m-arrow">◎</span><span class="m-label">模仿源视频动作</span>
+  </button>
+  <span id="mimicInfo"></span>
+</footer>
+
+<p id="banner" class="hidden"></p>
+
+<div id="err" hidden role="alert">
+  <div class="err-card">
+    <h2 id="errTitle">出错了</h2>
+    <p id="errMsg"></p>
+    <details><summary>技术细节</summary><pre id="errDetail"></pre></details>
+    <div class="btn-row">
+      <button id="errAlt">换备用 CDN 重试</button>
+      <button id="errRetry" class="primary">重试</button>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+const $ = s => document.querySelector(s);
+const clamp = (v,a,b) => Math.min(b, Math.max(a,v));
+const lerp = (a,b,r) => a + (b-a)*r;
+const DEG = Math.PI/180;
+const rand = (a,b) => a + Math.random()*(b-a);
+const pick = arr => arr[Math.floor(Math.random()*arr.length)];
+
+/* ---------- 错误可见化 ---------- */
+function showError(title, msg, detail){
+  $('#errTitle').textContent = title;
+  $('#errMsg').textContent = msg || '';
+  $('#errDetail').textContent = detail || '';
+  $('#err').hidden = false;
+}
+window.addEventListener('error', e => showError('运行时错误', e.message, `${e.filename}:${e.lineno}`));
+window.addEventListener('unhandledrejection', e => showError('异步异常', String(e.reason?.message || e.reason), e.reason?.stack || ''));
+$('#errRetry').onclick = () => location.reload();
+$('#errAlt').onclick = () => { const u = new URL(location.href); u.searchParams.set('cdn','unpkg'); location.href = u.toString(); };
+
+/* ---------- 人偶造型常量（无动作文件时的回退比例；取自源视频帧） ---------- */
+const FIG = {
+  hipY:0.52, chestY:0.80, headY:0.925, headR:0.062,
+  sweaterTop:0.825, sweaterBottom:0.44, sleeveR:0.085,
+  upperArm:0.165, foreArm:0.145, armOut:50*DEG, armFore:95*DEG, armFwd:8*DEG,
+  thigh:0.25, shin:0.23, footH:0.055, legR:0.055, hairBottom:0.72,
+  liftThigh:80*DEG, liftShin:30*DEG, headTilt:6*DEG,
+  sweater:0x26262e, jeans:0x9fb0c8, skin:0xe8c3a8, hair:0x141419
+};
+/* 源视频测得的画面轴向相对规格 pitch_deg 的偏移（用于"对齐视频构图"） */
+const VIDEO_PITCH_ADJ = 12;
+
+/* ---------- 规格归一化 ---------- */
+const PART_RULES = [
+  {kind:'head', h:0.93, k:['head','face','hair','skull','头','脸','发']},
+  {kind:'arm',  h:0.78, k:['arm','hand','elbow','forearm','shoulder','肩','手','臂','肘']},
+  {kind:'torso',h:0.55, k:['torso','chest','waist','hip','pelvis','body','腰','胯','躯干','胸']},
+  {kind:'leg',  h:null, k:['leg','腿','foot','shoe','脚','鞋']},
+  {kind:'leg',  h:0.35, k:['thigh','大腿']},
+  {kind:'leg',  h:0.25, k:['knee','膝']},
+  {kind:'leg',  h:0.15, k:['shin','小腿']}
+];
+const TRAIL_COLORS = [0x4dd0e1,0xffb74d,0xaed581,0xf06292,0x9575cd,0x4fc3f7,0xff8a65,0x81c784];
+
+function normSubject(s, i){
+  const path = (s.path||[]).map(p => ({
+    t: Number(p.t)||0,
+    /* schema +x = 相机右；相机朝 +Z 时屏幕右 = 世界 −X，故取负镜像入世界系 */
+    x: -(Number(p.pos_m?.[0])||0),
+    d: Number(p.pos_m?.[1])||0,
+    facing: p.facing_deg === undefined ? null : Number(p.facing_deg),
+    posture: p.posture || s.posture || 'stand'
+  })).sort((a,b) => a.t-b.t);
+  return {
+    id: s.id ?? `S${i+1}`,
+    cls: String(s.class||'').toLowerCase(),
+    desc: String(s.desc||'').toLowerCase(),
+    size: (s.size_m && s.size_m.length===3) ? s.size_m.map(Number) : [0.4,0.4,1],
+    posture: s.posture || 'stand',
+    path
+  };
+}
+function normSet(s){
+  return {
+    cls: String(s.class||'other'),
+    x: -(Number(s.pos_m?.[0])||0),
+    d: Number(s.pos_m?.[1])||0,
+    size: (s.size_m && s.size_m.length===3) ? s.size_m.map(Number) : [1,1,1],
+    base: s.base_m === undefined ? 0 : Number(s.base_m),
+    yaw: Number(s.yaw_deg)||0
+  };
+}
+function pickPrimary(subs){
+  const person = subs.find(s => s.cls.includes('person'));
+  if(person) return person;
+  return subs.reduce((a,b) => (!a || b.size[2] > a.size[2]) ? b : a, null);
+}
+function normalize(raw){
+  const spec = {
+    shot:{start:0, end:0, ...(raw.shot||{})},
+    camera:{height_m:1.2, angle:'eye', pitch_deg:0, fov_deg:50, move:'static', framing:'full', subject:null, ...(raw.camera||{})},
+    subjects:(raw.subjects||[]).map(normSubject),
+    set:(raw.set||[]).map(normSet),
+    events:Array.isArray(raw.events) ? raw.events : [],
+    environment:{type:'indoor', ground:'floor', ceiling:false, sky:false, ...(raw.environment||{})}
+  };
+  spec.shot.start = Number(spec.shot.start)||0;
+  const maxT = spec.subjects.reduce((m,s) => s.path.reduce((a,p) => Math.max(a,p.t), m), spec.shot.start);
+  const end = Number(spec.shot.end);
+  spec.shot.end = Number.isFinite(end) && end > spec.shot.start ? end : maxT;
+  spec.camera.height_m = Number(spec.camera.height_m)||0;
+  spec.camera.pitch_deg = Number(spec.camera.pitch_deg)||0;
+  spec.camera.fov_deg = Number(spec.camera.fov_deg)||50;
+  spec.primary = pickPrimary(spec.subjects);
+  spec.partKind = {}; spec.partHeight = {};
+  const H = spec.primary ? spec.primary.size[2] : 1;
+  spec.subjects.forEach(s => {
+    if(s === spec.primary){ spec.partKind[s.id]='body'; spec.partHeight[s.id]=0; return; }
+    const text = `${s.cls} ${s.desc}`;
+    const rule = PART_RULES.find(r => r.k.some(k => text.includes(k)));
+    spec.partKind[s.id] = rule ? rule.kind : 'prop';
+    spec.partHeight[s.id] = rule ? (rule.h === null ? null : rule.h*H) : null;
+  });
+  spec.parts = spec.subjects.filter(s => s !== spec.primary && spec.partKind[s.id] !== 'prop');
+  return spec;
+}
+
+/* ---------- 采样 ---------- */
+function lerpAngle(a,b,r){ const d = (((b-a)%360)+540)%360-180; return a + d*r; }
+function samplePath(path, t){
+  if(!path.length) return {t,x:0,d:0,facing:null,posture:'stand'};
+  if(t <= path[0].t) return {...path[0]};
+  const last = path[path.length-1];
+  if(t >= last.t) return {...last};
+  for(let i=0;i<path.length-1;i++){
+    const a=path[i], b=path[i+1];
+    if(t >= a.t && t <= b.t){
+      const r = (b.t-a.t) === 0 ? 0 : (t-a.t)/(b.t-a.t);
+      return {t, x:lerp(a.x,b.x,r), d:lerp(a.d,b.d,r),
+        facing:(a.facing===null||b.facing===null) ? (a.facing ?? b.facing) : lerpAngle(a.facing,b.facing,r),
+        posture: r<0.5 ? a.posture : b.posture};
+    }
+  }
+  return {...last};
+}
+
+/* ---------- 坐标约定 ---------- */
+/* 世界系：相机首帧在原点朝 +Z（屏幕右 = 世界 −X），schema x 已在入料时镜像。
+   人偶局部：+Z=面朝方向，+X=自身左侧（面向 +Z、up +Y 时右手在 −X）。 */
+const yawOf = deg => Math.atan2(-Math.cos(deg*DEG), Math.sin(deg*DEG));
+
+/* ---------- three.js 加载（备用 CDN） ---------- */
+const CDN_BASES = [
+  window.__CDN,
+  {three:'https://cdn.jsdelivr.net/npm/three@0.164.1/build/three.module.js', addons:'https://cdn.jsdelivr.net/npm/three@0.164.1/examples/jsm/'},
+  {three:'https://unpkg.com/three@0.164.1/build/three.module.js', addons:'https://unpkg.com/three@0.164.1/examples/jsm/'}
+].filter((b,i,a) => a.findIndex(x => x.three===b.three) === i);
+async function loadControls(base){
+  try{ return (await import(base.addons+'controls/OrbitControls.js')).OrbitControls; }
+  catch(e){
+    const res = await fetch(base.addons+'controls/OrbitControls.js');
+    if(!res.ok) throw new Error('OrbitControls HTTP '+res.status);
+    const src = await res.text();
+    const url = URL.createObjectURL(new Blob([src.replace(/(['"])three\1/g, `'${base.three}'`)], {type:'text/javascript'}));
+    try{ return (await import(url)).OrbitControls; } finally{ URL.revokeObjectURL(url); }
+  }
+}
+async function loadThree(){
+  const errs = [];
+  for(const base of CDN_BASES){
+    try{
+      const THREE = await import(base.three);
+      return {THREE, OrbitControls: await loadControls(base)};
+    }catch(e){ errs.push(`${base.three}\n  ${e?.message||e}`); }
+  }
+  throw new Error('three.js CDN 全部不可达：\n'+errs.join('\n'));
+}
+
+/* ---------- 状态 ---------- */
+let THREE, OrbitControls, renderer, scene, camera, controls;
+let sceneRoot = null, setGroup = null, envGroup = null, figGroup = null, lightPool = null;
+let spec = null, specName = '';
+let groups = new Map(), trails = new Map(), ghosts = [], shells = [], eventMarks = [], figNodes = new Map();
+let headRing = null;
+let view = 'schema', freeCam = false, aspectMode = 'viewport', pitchAdj = 0;
+let playhead = 0, playing = false, speed = 1, loopRunning = true;
+let dirty = true, renderCount = 0, frameMs = 0, submitMsLast = 0, qualityLevel = 0;
+let lastRenderAt = 0, lastTickAt = 0, overBudgetMs = 0, underBudgetMs = 0, frameSamples = 0, firstRenderAt = 0;
+let crowdMesh = null, phonePoints = null, seatMesh = null, baseFog = null, poolOrigin = null;
+let camState = {pos:{x:0,y:0,z:0}, dir:{x:0,y:0,z:0}};
+let mediaList = [], videoAspect = null, videoName = '';
+let motion = null, mimic = false, motionInfo = '';
+let figP = null;                       /* 人偶比例参数（米） */
+let motionTargets = null;              /* IK 平滑目标缓存 */
+const mm = $('#minimap'), mmCtx = mm.getContext('2d');
+const MM_SIZE = 228;
+
+/* ---------- 资源预算契约（产品层硬约束，与 JSON 体量无关） ---------- */
+const BUDGET = {
+  maxFrameMs: 33,
+  minFrameIntervalMs: 33,
+  maxCrowd: 900,
+  maxPhoneLights: 180,
+  maxLights: 4,
+  maxTriangles: 120000,
+  maxDrawCalls: 40,
+  idleRedraws: 1,
+  warmupFrames: 20
+};
+const GHOST_COUNT = 10;
+const QUALITY_LEVELS = [
+  {id:'L0', crowd:BUDGET.maxCrowd, phone:BUDGET.maxPhoneLights, fog:true,  pixelRatio:2},
+  {id:'L1', crowd:450, phone:90, fog:true,  pixelRatio:1},
+  {id:'L2', crowd:200, phone:0,  fog:false, pixelRatio:1}
+];
+
+/* ---------- 释放 ---------- */
+function disposeObject(obj){
+  obj.traverse(o => {
+    if(o.geometry) o.geometry.dispose();
+    const m = o.material;
+    if(m) (Array.isArray(m)?m:[m]).forEach(x => x.dispose());
+  });
+}
+function clearScene(){
+  if(sceneRoot){ scene.remove(sceneRoot); disposeObject(sceneRoot); sceneRoot = null; }
+  groups.clear(); trails.clear(); ghosts = []; shells = []; eventMarks = []; figNodes.clear();
+  headRing = null; setGroup = null; envGroup = null; figGroup = null; lightPool = null;
+  motionTargets = null;
+}
+
+/* ---------- 竞技场生成器（全部由 set 推导） ---------- */
+function radialTexture(){
+  const c = document.createElement('canvas');
+  c.width = c.height = 128;
+  const g = c.getContext('2d');
+  const grd = g.createRadialGradient(64,64,0,64,64,64);
+  grd.addColorStop(0,'rgba(255,255,255,.72)');
+  grd.addColorStop(.45,'rgba(210,225,255,.42)');
+  grd.addColorStop(1,'rgba(160,190,255,0)');
+  g.fillStyle = grd; g.fillRect(0,0,128,128);
+  const t = new THREE.CanvasTexture(c);
+  t.colorSpace = THREE.SRGBColorSpace;
+  return t;
+}
+function buildStage(item){
+  const [w,d,h] = item.size;
+  const g = new THREE.Group();
+  const tile = 2;
+  const cols = Math.max(1, Math.round(w/tile)), rows = Math.max(1, Math.round(d/tile));
+  const tx = w/cols, tz = d/rows;
+  const hues = [0x7b4bd8, 0x3b62c8, 0xd8d2ff, 0x8f5bd0, 0x4a7fd6];
+  const positions = [], colors = [], indices = [];
+  let v = 0;
+  for(let i=0;i<cols;i++) for(let j=0;j<rows;j++){
+    const c = new THREE.Color(pick(hues)).multiplyScalar(rand(1.1,1.8));
+    const cx = -w/2 + tx*(i+.5), cz = -d/2 + tz*(j+.5);
+    const hw = tx*.465, hd = tz*.465, y = h + .012;
+    positions.push(cx-hw,y,cz-hd, cx+hw,y,cz-hd, cx+hw,y,cz+hd, cx-hw,y,cz+hd);
+    for(let k=0;k<4;k++) colors.push(c.r,c.g,c.b);
+    indices.push(v,v+2,v+1, v,v+3,v+2);
+    v += 4;
+  }
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.Float32BufferAttribute(positions,3));
+  geo.setAttribute('color', new THREE.Float32BufferAttribute(colors,3));
+  geo.setIndex(indices);
+  const mesh = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({vertexColors:true}));
+  g.add(mesh);
+  const pool = new THREE.Mesh(
+    new THREE.PlaneGeometry(5,5),
+    new THREE.MeshBasicMaterial({map:radialTexture(), transparent:true, blending:THREE.AdditiveBlending, depthWrite:false})
+  );
+  pool.rotation.x = -Math.PI/2;
+  pool.position.y = h + .03;
+  g.add(pool);
+  lightPool = pool;
+  poolOrigin = {x:item.x, z:item.d, halfW:w/2, halfD:d/2};
+  return g;
+}
+function coprimeStride(cells){
+  for(let s = 104729; s > 1; s--){
+    let a = cells, b = s;
+    while(b){ const t = a % b; a = b; b = t; }
+    if(a === 1) return s;
+  }
+  return 1;
+}
+function buildAudience(item){  const [w,d] = item.size;
+  const g = new THREE.Group();
+  const spacing = .45;
+  const cols = Math.max(1, Math.floor(w/spacing));
+  const rows = Math.max(1, Math.floor(d/spacing));
+  const cells = cols*rows;
+  const n = Math.min(BUDGET.maxCrowd, cells);
+  const stride = coprimeStride(cells);
+  const geo = new THREE.CapsuleGeometry(.2, 1.3, 1, 5);
+  const mat = new THREE.MeshLambertMaterial({color:0xffffff});
+  const inst = new THREE.InstancedMesh(geo, mat, n);
+  const dummy = new THREE.Object3D();
+  const colors = [0x1d222c,0x262c38,0x2e2434,0x1a2630,0x302a2a];
+  for(let i=0;i<n;i++){
+    const cell = (i*stride) % cells;
+    const col = cell % cols, row = Math.floor(cell/cols);
+    dummy.position.set(
+      -w/2 + spacing*(col+.5) + rand(-.18,.18),
+      .85*rand(.92,1.08),
+      -d/2 + spacing*(row+.5) + rand(-.18,.18)
+    );
+    dummy.rotation.set(0, rand(0,Math.PI), 0);
+    dummy.scale.set(rand(.9,1.1), rand(.9,1.1), rand(.9,1.1));
+    dummy.updateMatrix();
+    inst.setMatrixAt(i, dummy.matrix);
+    inst.setColorAt(i, new THREE.Color(pick(colors)));
+  }
+  inst.instanceMatrix.needsUpdate = true;
+  if(inst.instanceColor) inst.instanceColor.needsUpdate = true;
+  inst.userData.total = n;
+  crowdMesh = inst;
+  g.add(inst);
+  const lights = Math.min(BUDGET.maxPhoneLights, Math.floor(n*.35));
+  const pts = new Float32Array(lights*3);
+  for(let i=0;i<lights;i++){
+    const col = Math.floor(Math.random()*cols), row = Math.floor(Math.random()*rows);
+    pts[i*3]   = -w/2 + spacing*(col+.5) + rand(-.3,.3);
+    pts[i*3+1] = rand(1.4,2.1);
+    pts[i*3+2] = -d/2 + spacing*(row+.5) + rand(-.3,.3);
+  }
+  const pgeo = new THREE.BufferGeometry();
+  pgeo.setAttribute('position', new THREE.BufferAttribute(pts,3));
+  const phone = new THREE.Points(pgeo, new THREE.PointsMaterial({color:0xfff2c8, size:.22, sizeAttenuation:true, transparent:true, opacity:.9, blending:THREE.AdditiveBlending, depthWrite:false}));
+  phone.userData.total = lights;
+  phonePoints = phone;
+  g.add(phone);
+  return g;
+}
+function pushBox(positions, indices, cx, cy, cz, w, h, d){
+  const x0=cx-w/2, x1=cx+w/2, y0=cy-h/2, y1=cy+h/2, z0=cz-d/2, z1=cz+d/2;
+  const v = positions.length/3;
+  positions.push(
+    x0,y0,z0, x1,y0,z0, x1,y1,z0, x0,y1,z0,
+    x0,y0,z1, x1,y0,z1, x1,y1,z1, x0,y1,z1);
+  const f = [[0,1,2],[0,2,3],[5,4,7],[5,7,6],[4,0,3],[4,3,7],[1,5,6],[1,6,2],[3,2,6],[3,6,7],[4,5,1],[4,1,0]];
+  for(const t of f) indices.push(v+t[2], v+t[1], v+t[0]);
+}
+function buildGrandstand(item){
+  const [w,d,h] = item.size;
+  const g = new THREE.Group();
+  const tiers = Math.max(7, Math.round(h/2.6));
+  const dz = d/tiers, dy = h/tiers;
+  const seats = [];
+  const positions = [], indices = [];
+  for(let k=0;k<tiers;k++){
+    const tw = w - k*4;
+    pushBox(positions, indices, 0, dy*(k+.5), -d/2 + dz*(k+.5), tw, dy, dz*.96);
+    const people = Math.floor(tw/2.2);
+    for(let i=0;i<people;i++){
+      seats.push([-tw/2 + 1.1 + i*2.2 + rand(-.5,.5), dy*k + .95, -d/2 + dz*(k+.5) + rand(-.3,.3)]);
+    }
+  }
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.Float32BufferAttribute(positions,3));
+  geo.setIndex(indices);
+  geo.computeVertexNormals();
+  g.add(new THREE.Mesh(geo, new THREE.MeshLambertMaterial({color:0x1a1f28})));
+  const inst = new THREE.InstancedMesh(
+    new THREE.CapsuleGeometry(.16, 1.0, 1, 4),
+    new THREE.MeshBasicMaterial({color:0x0d1017}), seats.length);
+  const dummy = new THREE.Object3D();
+  seats.forEach((s,i) => {
+    dummy.position.set(s[0], s[1], s[2]);
+    dummy.updateMatrix();
+    inst.setMatrixAt(i, dummy.matrix);
+  });
+  inst.instanceMatrix.needsUpdate = true;
+  inst.userData.total = seats.length;
+  seatMesh = inst;
+  g.add(inst);
+  return g;
+}
+function buildLamp(item){
+  const [w,d,h] = item.size;
+  const g = new THREE.Group();
+  const bar = new THREE.Mesh(
+    new THREE.BoxGeometry(w, h*.7, d*.8),
+    new THREE.MeshStandardMaterial({color:0xffd9f0, emissive:0xd9b8ff, emissiveIntensity:2.2})
+  );
+  bar.position.set(0, h/2, 0);
+  g.add(bar);
+  const beam = new THREE.Mesh(
+    new THREE.ConeGeometry(5.5, item.base, 20, 1, true),
+    new THREE.MeshBasicMaterial({color:0xb58cff, transparent:true, opacity:.055, blending:THREE.AdditiveBlending, depthWrite:false, side:THREE.DoubleSide})
+  );
+  beam.position.set(0, -item.base/2, 0);
+  g.add(beam);
+  const pl = new THREE.PointLight(0xd9c2ff, 2600, 0, 2);
+  pl.position.set(0, -item.base, 0);
+  g.add(pl);
+  return g;
+}
+function greyBox(cls, size){
+  const [w,d,h] = size;
+  const g = new THREE.Group();
+  const mat = new THREE.MeshStandardMaterial({color:0x6d7482, roughness:.85});
+  const dark = new THREE.MeshStandardMaterial({color:0x4a505c, roughness:.9});
+  const add = (gw,gh,gd,x,y,z,m=mat) => {
+    const b = new THREE.Mesh(new THREE.BoxGeometry(gw,gh,gd), m);
+    b.position.set(x,y,z); g.add(b); return b;
+  };
+  if(cls.includes('chair')){
+    add(w*.92,h*.12,d*.9, 0, h*.5, 0);
+    add(w*.9, h*.88, d*.1, 0, h*.62, -d*.42);
+    add(w*.08, h*.5, d*.08, -w*.38, h*.25, -d*.34, dark);
+    add(w*.08, h*.5, d*.08,  w*.38, h*.25, -d*.34, dark);
+  }else if(cls.includes('table')){
+    add(w, h*.1, d, 0, h*.95, 0);
+    add(w*.08, h*.9, d*.08, -w*.4, h*.45, -d*.4, dark);
+    add(w*.08, h*.9, d*.08,  w*.4, h*.45, -d*.4, dark);
+  }else if(cls.includes('sofa')){
+    add(w, h*.42, d, 0, h*.21, 0);
+    add(w, h*.58, d*.18, 0, h*.71, -d*.4);
+    add(w*.18, h*.36, d*.9, -w*.41, h*.6, 0);
+    add(w*.18, h*.36, d*.9,  w*.41, h*.6, 0);
+  }else if(cls.includes('car')){
+    add(w, h*.42, d, 0, h*.28, 0);
+    add(w*.55, h*.4, d*.5, 0, h*.66, 0);
+  }else if(cls.includes('crate')){
+    add(w, h, d, 0, h/2, 0);
+  }else if(cls.includes('bench')){
+    add(w, h*.12, d, 0, h*.94, 0);
+    add(w*.1, h*.9, d*.14, -w*.42, h*.45, 0, dark);
+    add(w*.1, h*.9, d*.14,  w*.42, h*.45, 0, dark);
+  }else if(cls.includes('pillar')){
+    add(w*.8, h, d*.8, 0, h/2, 0);
+  }else{
+    add(w, h, d, 0, h/2, 0);
+  }
+  return g;
+}
+function buildSet(){
+  const g = new THREE.Group();
+  for(const item of spec.set){
+    const c = item.cls.toLowerCase();
+    let node;
+    if(c.includes('stage')) node = buildStage(item);
+    else if(c.includes('audience')) node = buildAudience(item);
+    else if(c.includes('grandstand')) node = buildGrandstand(item);
+    else if(c.includes('lamp')) node = buildLamp(item);
+    else node = greyBox(c, item.size);
+    node.position.set(item.x, item.base, item.d);
+    node.rotation.y = -item.yaw*DEG;   /* 镜像系下 yaw 反号 */
+    g.add(node);
+  }
+  return g;
+}
+function buildEnvironment(){
+  const g = new THREE.Group();
+  const env = spec.environment;
+  if(env.ground && env.ground !== 'none'){
+    const ground = new THREE.Mesh(new THREE.PlaneGeometry(600,600), new THREE.MeshLambertMaterial({color:0x0b0e14}));
+    ground.rotation.x = -Math.PI/2;
+    ground.position.y = -0.02;
+    g.add(ground);
+  }
+  scene.background = new THREE.Color(env.sky ? 0x8fb6d8 : 0x070810);
+  baseFog = env.sky ? null : new THREE.FogExp2(0x0a0b16, .009);
+  scene.fog = baseFog;
+  return g;
+}
+function buildLights(){
+  const g = new THREE.Group();
+  g.add(new THREE.AmbientLight(0x93a2c8, 1.5));
+  g.add(new THREE.HemisphereLight(0xa8bcf0, 0x1b2130, 1.35));
+  const violet = new THREE.DirectionalLight(0xb98cff, 3.4);
+  violet.position.set(-16, 16, 26);
+  g.add(violet);
+  return g;
+}
+
+/* ---------- 画质档位：帧时驱动，带迟滞与预热豁免 ---------- */
+function setQuality(level){
+  qualityLevel = clamp(level|0, 0, QUALITY_LEVELS.length-1);
+  const q = QUALITY_LEVELS[qualityLevel];
+  if(crowdMesh){
+    const total = crowdMesh.userData.total || 0;
+    crowdMesh.count = Math.min(BUDGET.maxCrowd, Math.max(1, Math.floor(total * q.crowd / BUDGET.maxCrowd)));
+  }
+  if(phonePoints){
+    const total = phonePoints.userData.total || 0;
+    phonePoints.geometry.setDrawRange(0, Math.min(total, q.phone));
+    phonePoints.visible = q.phone > 0;
+  }
+  if(seatMesh){
+    const total = seatMesh.userData.total || 0;
+    seatMesh.count = qualityLevel >= 2 ? Math.floor(total*.5) : total;
+  }
+  if(scene) scene.fog = q.fog ? baseFog : null;
+  if(renderer) renderer.setPixelRatio(Math.min(devicePixelRatio, q.pixelRatio));
+  markDirty();
+}
+function adaptQuality(ms){
+  const now = performance.now();
+  if(firstRenderAt === 0){ firstRenderAt = now; }
+  const elapsed = now - firstRenderAt;
+  if(frameSamples < BUDGET.warmupFrames && elapsed < 1500){ frameSamples++; return; }
+  frameSamples++;
+  const over = BUDGET.maxFrameMs*1.5, under = BUDGET.maxFrameMs*.6;
+  if(ms > over){ overBudgetMs += ms; underBudgetMs = 0; }
+  else if(ms < under){ underBudgetMs += ms; overBudgetMs = 0; }
+  else { overBudgetMs = 0; underBudgetMs = 0; }
+  if(overBudgetMs > 2000 && qualityLevel < QUALITY_LEVELS.length-1){ setQuality(qualityLevel+1); overBudgetMs = 0; }
+  else if(underBudgetMs > 3000 && qualityLevel > 0){ setQuality(qualityLevel-1); underBudgetMs = 0; }
+}
+
+/* ---------- 按需渲染：dirty 是唯一的重绘入口 ---------- */
+function markDirty(){ dirty = true; }
+
+/* ---------- 人偶比例（有动作文件时按视频骨架重建） ---------- */
+function figureParams(){
+  const p = spec.primary;
+  const H = p ? p.size[2] : 1.6;
+  if(!motion || !motion.body){
+    return {
+      H, k:H, thigh:H*FIG.thigh, shin:H*FIG.shin, upperArm:H*FIG.upperArm, foreArm:H*FIG.foreArm,
+      shoulderX:null, hipX:null,
+      hipY:H*FIG.hipY, chestLocal:H*(FIG.chestY-FIG.hipY), headLocal:H*(FIG.headY-FIG.chestY),
+      headR:H*FIG.headR, footH:H*FIG.footH, torsoTop:H*(FIG.sweaterTop-FIG.hipY), torsoBottom:H*(FIG.sweaterBottom-FIG.hipY)
+    };
+  }
+  const b = motion.body;
+  const thigh = (b.legThighL+b.legThighR)/2, shin = (b.legShinL+b.legShinR)/2;
+  const shoulderY = (b.shoulderL[1]+b.shoulderR[1])/2;
+  const headU = 0.62;                             /* 肩中→头顶 ≈0.62 躯干 */
+  const totalU = thigh + shin + shoulderY + headU;
+  const k = H/Math.max(.1, totalU);
+  const footH = k*0.10;
+  const hipY = k*(thigh+shin) + footH;
+  return {
+    H, k, thigh:k*thigh, shin:k*shin,
+    upperArm:k*(b.armUpperL+b.armUpperR)/2, foreArm:k*(b.armForeL+b.armForeR)/2,
+    shoulderX:k*Math.abs(b.shoulderL[0]), hipX:k*Math.abs(b.hipL[0]),
+    hipY, chestLocal:k*shoulderY, headLocal:k*headU*.45,
+    headR:k*.24, footH,
+    torsoTop:k*(shoulderY+0.24), torsoBottom:k*-0.06,
+    standAnkleU:-(thigh+shin)
+  };
+}
+
+function partOffset(kind, side){
+  const parts = spec.parts.filter(s => spec.partKind[s.id] === kind);
+  if(!parts.length) return 0;
+  const prim = samplePath(spec.primary.path, spec.shot.start);
+  const label = parts.find(s => {
+    const t = `${s.cls} ${s.desc}`;
+    return side > 0 ? /left|左/.test(t) : /right|右/.test(t);
+  });
+  const target = label || parts.find(s => {
+    const off = samplePath(s.path, spec.shot.start).x - prim.x;
+    return side > 0 ? off > 0 : off < 0;
+  }) || parts[0];
+  return Math.abs(samplePath(target.path, spec.shot.start).x - prim.x);
+}
+
+/* ---------- 关节化人偶（局部 +X=自身左） ---------- */
+function buildFigure(){
+  const p = spec.primary;
+  if(!p) return null;
+  const H = p.size[2];
+  figP = figureParams();
+  const P = figP;
+  const root = new THREE.Group();
+  root.name = 'root';
+  const hips = new THREE.Group();
+  hips.name = 'hips';
+  hips.position.y = P.hipY;
+  root.add(hips);
+  const torso = new THREE.Group();
+  torso.name = 'torso';
+  hips.add(torso);
+  const swH = Math.max(.02, P.torsoTop - P.torsoBottom);
+  const sw = new THREE.Mesh(new THREE.BoxGeometry(p.size[0], swH, p.size[1]), new THREE.MeshStandardMaterial({color:FIG.sweater, roughness:.95}));
+  sw.position.y = (P.torsoTop + P.torsoBottom)/2;
+  torso.add(sw);
+  const chest = new THREE.Group();
+  chest.name = 'chest';
+  chest.position.y = P.chestLocal;
+  torso.add(chest);
+  const neck = new THREE.Mesh(new THREE.CylinderGeometry(H*.022, H*.03, H*.05, 12), new THREE.MeshStandardMaterial({color:FIG.skin, roughness:.8}));
+  neck.position.y = H*.02;
+  chest.add(neck);
+  const head = new THREE.Mesh(new THREE.SphereGeometry(P.headR, 24, 18), new THREE.MeshStandardMaterial({color:FIG.skin, roughness:.75}));
+  head.name = 'head';
+  head.position.y = P.headLocal;
+  head.rotation.x = FIG.headTilt;
+  chest.add(head);
+  const hairH = Math.max(.02, P.headLocal + P.headR);
+  const hair = new THREE.Mesh(new THREE.BoxGeometry(P.headR*1.9, hairH, P.headR*1.6), new THREE.MeshStandardMaterial({color:FIG.hair, roughness:.9}));
+  hair.position.set(0, P.headLocal + P.headR*.35, -P.headR*.55);
+  chest.add(hair);
+
+  const shoulderX = (motion && motion.body) ? P.shoulderX : (partOffset('arm', 1) || p.size[0]*.36);
+  const hipX = (motion && motion.body) ? P.hipX : (partOffset('leg', 1) || p.size[0]*.22);
+  const skinM = new THREE.MeshStandardMaterial({color:FIG.skin, roughness:.75});
+  const jeansM = new THREE.MeshStandardMaterial({color:FIG.jeans, roughness:.85});
+  const shoeM = new THREE.MeshStandardMaterial({color:0xe8e8ea, roughness:.7});
+
+  for(const side of [1,-1]){
+    const tag = side > 0 ? 'L' : 'R';      /* +X = 自身左 */
+    const shoulder = new THREE.Group();
+    shoulder.name = 'shoulder'+tag;
+    shoulder.position.set(side*shoulderX, 0, 0);
+    chest.add(shoulder);
+    const sleeveR = Math.max(.012, H*FIG.sleeveR);
+    const upper = new THREE.Mesh(new THREE.CylinderGeometry(sleeveR, sleeveR*.82, P.upperArm, 14), new THREE.MeshStandardMaterial({color:FIG.sweater, roughness:.95}));
+    upper.position.y = -P.upperArm/2;
+    shoulder.add(upper);
+
+    const elbow = new THREE.Group();
+    elbow.name = 'elbow'+tag;
+    elbow.position.y = -P.upperArm;
+    shoulder.add(elbow);
+    const fore = new THREE.Mesh(new THREE.CylinderGeometry(sleeveR*.78, sleeveR*.5, P.foreArm, 12), new THREE.MeshStandardMaterial({color:FIG.sweater, roughness:.95}));
+    fore.position.y = -P.foreArm/2;
+    elbow.add(fore);
+    const hand = new THREE.Mesh(new THREE.SphereGeometry(H*.028, 12, 10), skinM);
+    hand.name = 'hand'+tag;
+    hand.position.y = -P.foreArm;
+    elbow.add(hand);
+
+    const hip = new THREE.Group();
+    hip.name = 'hip'+tag;
+    hip.position.set(side*hipX, 0, 0);
+    hips.add(hip);
+    const legR = Math.max(.01, H*FIG.legR);
+    const thigh = new THREE.Mesh(new THREE.CylinderGeometry(legR, legR*.85, P.thigh, 12), jeansM);
+    thigh.position.y = -P.thigh/2;
+    hip.add(thigh);
+    const knee = new THREE.Group();
+    knee.name = 'knee'+tag;
+    knee.position.y = -P.thigh;
+    hip.add(knee);
+    const shin = new THREE.Mesh(new THREE.CylinderGeometry(legR*.85, legR*.7, P.shin, 12), jeansM);
+    shin.position.y = -P.shin/2;
+    knee.add(shin);
+    const ankle = new THREE.Group();
+    ankle.name = 'ankle'+tag;
+    ankle.position.y = -P.shin;
+    knee.add(ankle);
+    const foot = new THREE.Mesh(new THREE.BoxGeometry(H*.05, P.footH, H*.12), shoeM);
+    foot.name = 'foot'+tag;
+    foot.position.set(0, -P.footH/2, H*.022);
+    ankle.add(foot);
+    if(!motion){
+      /* 无动作文件：沿用源视频帧的静态姿态 */
+      if(side > 0){
+        hip.rotation.x = -FIG.liftThigh;
+        knee.rotation.x = FIG.liftThigh + FIG.liftShin;
+      }else{
+        hip.position.y = P.footH + (P.thigh + P.shin) - P.hipY;
+      }
+    }
+  }
+  sceneRoot.add(root);
+  figGroup = root;
+  root.traverse(o => { if(o.name) figNodes.set(o.name, o); });
+  return root;
+}
+
+/* ---------- 模仿驱动：动作文件 → 骨架 IK ---------- */
+const MKEY = {nose:0, leye:1, reye:2, lear:3, rear:4, lsh:5, rsh:6, lel:7, rel:8, lwr:9, rwr:10,
+              lhp:11, rhp:12, lkn:13, rkn:14, lan:15, ran:16};
+function poseAt(t){
+  if(!motion) return null;
+  const fi = clamp(Math.round((t - spec.shot.start)*motion.fps), 0, motion.poses.length-1);
+  const p = motion.poses[fi];
+  return p || null;
+}
+function joint2(pose, a, b, defY){
+  if(!pose) return null;
+  const A = pose[a], B = pose[b];
+  const good = x => x && x[2] >= .22;
+  if(good(A) && good(B)) return [(A[0]+B[0])/2, (A[1]+B[1])/2];
+  if(good(A)) return [A[0], A[1]];
+  if(good(B)) return [B[0], B[1]];
+  return null;
+}
+function sm(id, v, alpha){
+  const cur = motionTargets.get(id) || v;
+  const next = v === null ? cur : (cur === null ? v : [lerp(cur[0], v[0], alpha), lerp(cur[1], v[1], alpha)]);
+  motionTargets.set(id, next);
+  return next;
+}
+/* 两连杆 IK：解将 boneDir 旋转到 aim，弯折沿 bend 提供的方向 */
+function solveLimb(jointA, jointB, anchor, target, L1, L2, bend, restDown){
+  const d = new THREE.Vector2(target[0]-anchor[0], target[1]-anchor[1]);
+  let r = d.length();
+  const maxR = (L1+L2)*.995;
+  if(r < 1e-4) return;
+  if(r > maxR){ d.multiplyScalar(maxR/r); r = maxR; }
+  const a = (r*r + L1*L1 - L2*L2)/(2*r);
+  const h = Math.sqrt(Math.max(0, L1*L1 - a*a));
+  const dir = d.clone().normalize();
+  const perp = new THREE.Vector2(-dir.y, dir.x).multiplyScalar(bend*h);
+  const kx = anchor[0] + dir.x*a + perp.x, ky = anchor[1] + dir.y*a + perp.y;
+  const v1 = new THREE.Vector3(kx-anchor[0], ky-anchor[1], 0).normalize();
+  const v2 = new THREE.Vector3(target[0]-kx, target[1]-ky, 0).normalize();
+  const down = new THREE.Vector3(0,-1,0);
+  jointA.quaternion.setFromUnitVectors(down, v1);
+  const v2local = v2.clone().applyQuaternion(jointA.quaternion.clone().invert());
+  jointB.quaternion.setFromUnitVectors(down, v2local);
+}
+function applyMotion(t){
+  if(!motion || !figGroup || !figP) return;
+  const pose = poseAt(t);
+  const P = figP, k = P.k;
+  if(!motionTargets){
+    motionTargets = new Map();
+  }
+  /* 髋高：最低脚决定（y+向上，脚为负） */
+  const ankL = pose ? pose[MKEY.lan] : null, ankR = pose ? pose[MKEY.ran] : null;
+  const lo = [];
+  if(ankL && ankL[2] >= .18) lo.push(clamp(ankL[1], P.standAnkleU*1.06, -0.25));
+  if(ankR && ankR[2] >= .18) lo.push(clamp(ankR[1], P.standAnkleU*1.06, -0.25));
+  if(lo.length){
+    const hipU = -Math.min(...lo) + P.footH/k;
+    const hips = figNodes.get('hips');
+    hips.position.y = clamp(lerp(hips.position.y, hipU*k, .3), P.H*.25, P.H*.66);
+  }
+  /* 骨盆倾斜 */
+  const hL = pose ? pose[MKEY.lhp] : null, hR = pose ? pose[MKEY.rhp] : null;
+  if(hL && hR && hL[2] >= .2 && hR[2] >= .2){
+    const tilt = Math.atan2(hL[1]-hR[1], hL[0]-hR[0]);
+    figNodes.get('hips').rotation.z = lerp(figNodes.get('hips').rotation.z, tilt, .35);
+  }
+  /* 躯干侧倾 + 头 */
+  const smMid = joint2(pose, MKEY.lsh, MKEY.rsh);
+  const sh = sm('shmid', smMid, .4);
+  if(sh){
+    const lean = Math.atan2(sh[0], Math.max(.15, sh[1]));
+    figNodes.get('torso').rotation.z = lerp(figNodes.get('torso').rotation.z, -lean*.75, .3);
+    const nose = pose ? pose[MKEY.nose] : null;
+    if(nose && nose[2] >= .2){
+      const hx = nose[0]-sh[0], hy = Math.max(.05, nose[1]-sh[1]);
+      figNodes.get('chest').rotation.z = lerp(figNodes.get('chest').rotation.z, -Math.atan2(hx,hy)*.6, .3);
+      const head = figNodes.get('head');
+      head.position.x = lerp(head.position.x, clamp(hx*k*.55, -P.headR*1.1, P.headR*1.1), .3);
+    }
+  }
+  /* 四肢 */
+  const chestY = P.chestLocal;
+  const armSpec = [
+    ['L', 1, MKEY.lwr, 'shoulderL','elbowL'],
+    ['R',-1, MKEY.rwr, 'shoulderR','elbowR']
+  ];
+  for(const [tag, side, wi, sname, ename] of armSpec){
+    const wrist = pose ? pose[wi] : null;
+    const tgt = sm('hand'+tag, (wrist && wrist[2] >= .22) ? [wrist[0]*k, wrist[1]*k] : null, .55);
+    if(!tgt) continue;
+    const shX = motion?.body ? P.shoulderX : (partOffset('arm',1) || spec.primary.size[0]*.36);
+    solveLimb(figNodes.get(sname), figNodes.get(ename), [side*shX, chestY], tgt, P.upperArm, P.foreArm, side, null);
+  }
+  const legSpec = [
+    ['L', 1, MKEY.lan, 'hipL','kneeL'],
+    ['R',-1, MKEY.ran, 'hipR','kneeR']
+  ];
+  for(const [tag, side, ai, hname, kname] of legSpec){
+    const ank = pose ? pose[ai] : null;
+    const tgt = sm('foot'+tag, (ank && ank[2] >= .18) ? [ank[0]*k, ank[1]*k] : null, .5);
+    if(!tgt) continue;
+    const hpX = motion?.body ? P.hipX : (partOffset('leg',1) || spec.primary.size[0]*.22);
+    solveLimb(figNodes.get(hname), figNodes.get(kname), [side*hpX, 0], tgt, P.thigh, P.shin, side*.5, null);
+  }
+}
+function resetFigurePose(){
+  if(!figGroup) return;
+  motionTargets = new Map();
+  const P = figP || figureParams();
+  figNodes.get('hips').position.y = P.hipY;
+  figNodes.get('hips').rotation.z = 0;
+  figNodes.get('torso').rotation.z = 0;
+  figNodes.get('chest').rotation.z = 0;
+  const head = figNodes.get('head');
+  head.position.x = 0; head.rotation.x = FIG.headTilt;
+  for(const tag of ['L','R']){
+    for(const n of ['shoulder'+tag, 'elbow'+tag, 'hip'+tag, 'knee'+tag]){
+      const j = figNodes.get(n);
+      if(j){ j.rotation.set(0,0,0); j.quaternion.identity(); }
+    }
+  }
+  if(!motion){
+    const hipR = figNodes.get('hipR'), kneeR = figNodes.get('kneeR'), hipL = figNodes.get('hipL');
+    if(hipR && kneeR){ hipR.rotation.x = -FIG.liftThigh; kneeR.rotation.x = FIG.liftThigh + FIG.liftShin; }
+    if(hipL) hipL.position.y = P.footH + (P.thigh + P.shin) - P.hipY;
+  }
+}
+
+/* ---------- 其他主体 ---------- */
+function buildSubjects(){
+  spec.subjects.forEach(s => {
+    if(s === spec.primary) return;
+    if(spec.partKind[s.id] !== 'prop') return;
+    const grp = new THREE.Group();
+    const node = greyBox(s.cls, s.size);
+    node.position.y = s.size[2]/2;
+    grp.add(node);
+    sceneRoot.add(grp);
+    groups.set(s.id, grp);
+  });
+}
+function trailHeight(s){
+  const m = spec.partHeight[s.id];
+  return m === null ? s.size[2]/2 : m;
+}
+function buildTrails(){
+  spec.subjects.forEach((s,i) => {
+    if(s.path.length < 2) return;
+    const y = trailHeight(s);
+    const col = new THREE.Color(TRAIL_COLORS[i % TRAIL_COLORS.length]);
+    const positions = [], indices = [], colors = [];
+    for(let k=0;k<s.path.length-1;k++){
+      const a = s.path[k], b = s.path[k+1];
+      positions.push(a.x,y,a.d, b.x,y,b.d);
+      colors.push(col.r,col.g,col.b, col.r,col.g,col.b);
+      indices.push(k*2, k*2+1);
+    }
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.Float32BufferAttribute(positions,3));
+    geo.setAttribute('color', new THREE.Float32BufferAttribute(colors,3));
+    geo.setIndex(indices);
+    const line = new THREE.LineSegments(geo, new THREE.LineBasicMaterial({vertexColors:true, transparent:true, opacity:.95}));
+    line.frustumCulled = false;
+    sceneRoot.add(line);
+    trails.set(s.id, {line, geo, colors, color:col, segs:s.path.length-1, count:s.path.length});
+  });
+}
+function updateTrailColors(s, tr, t){
+  const arr = tr.geo.attributes.color.array;
+  for(let k=0;k<tr.segs;k++){
+    const done = s.path[k+1].t <= t + 1e-9;
+    const f = done ? 1 : 0.22;
+    arr[k*6+0] = tr.color.r*f; arr[k*6+1] = tr.color.g*f; arr[k*6+2] = tr.color.b*f;
+    arr[k*6+3] = arr[k*6+0]; arr[k*6+4] = arr[k*6+1]; arr[k*6+5] = arr[k*6+2];
+  }
+  tr.geo.attributes.color.needsUpdate = true;
+}
+function buildTrailBits(){
+  const p = spec.primary;
+  if(!p) return;
+  const H = p.size[2];
+  const geo = new THREE.SphereGeometry(H*.045, 12, 10);
+  const mat = new THREE.MeshBasicMaterial({color:0xffffff, transparent:true, opacity:.34, depthWrite:false});
+  const inst = new THREE.InstancedMesh(geo, mat, GHOST_COUNT);
+  const dummy = new THREE.Object3D();
+  for(let i=0;i<GHOST_COUNT;i++){
+    dummy.position.set(0,-99,0); dummy.updateMatrix();
+    inst.setMatrixAt(i, dummy.matrix);
+    inst.setColorAt(i, new THREE.Color(0xffc38a));
+  }
+  inst.instanceMatrix.needsUpdate = true;
+  if(inst.instanceColor) inst.instanceColor.needsUpdate = true;
+  inst.frustumCulled = false;
+  sceneRoot.add(inst);
+  ghosts.push({inst, dummy});
+  const rg = new THREE.RingGeometry(H*.14, H*.19, 48);
+  headRing = new THREE.Mesh(rg, new THREE.MeshBasicMaterial({color:0xffc38a, transparent:true, opacity:.9, side:THREE.DoubleSide}));
+  headRing.rotation.x = -Math.PI/2;
+  sceneRoot.add(headRing);
+}
+function buildEvents(){
+  const p = spec.primary;
+  for(const ev of spec.events){
+    const t = Number(ev.t ?? ev.time ?? ev.start);
+    if(!Number.isFinite(t)) continue;
+    const base = p ? samplePath(p.path, t) : {x:0,d:0};
+    const px = ev.pos_m ? -(Number(ev.pos_m[0])) : base.x;
+    const pd = ev.pos_m ? Number(ev.pos_m[1]) : base.d;
+    const pin = new THREE.Mesh(new THREE.ConeGeometry(.16,.55,12), new THREE.MeshBasicMaterial({color:0xff6b6b}));
+    pin.position.set(px, 1.7, pd);
+    pin.rotation.x = Math.PI;
+    pin.userData.t = t;
+    sceneRoot.add(pin);
+    eventMarks.push(pin);
+  }
+}
+
+/* ---------- 场景装配 ---------- */
+function buildScene(){
+  clearScene();
+  sceneRoot = new THREE.Group();
+  scene.add(sceneRoot);
+  envGroup = buildEnvironment();
+  sceneRoot.add(envGroup);
+  setGroup = buildSet();
+  sceneRoot.add(setGroup);
+  sceneRoot.add(buildLights());
+  buildFigure();
+  buildSubjects();
+  buildTrails();
+  buildTrailBits();
+  buildEvents();
+  playhead = spec.shot.start;
+  syncTimeUI();
+  updateScene();
+  updateCamera();
+  updateFramingInfo();
+}
+
+/* ---------- 相机（schema v1 语义） ---------- */
+function setCameraOrientation(pos, dir, up){
+  const zAxis = new THREE.Vector3(-dir.x,-dir.y,-dir.z).normalize();
+  const xAxis = new THREE.Vector3().crossVectors(up, zAxis).normalize();
+  const yAxis = new THREE.Vector3().crossVectors(zAxis, xAxis);
+  camera.quaternion.setFromRotationMatrix(new THREE.Matrix4().makeBasis(xAxis,yAxis,zAxis));
+  camera.position.set(pos.x,pos.y,pos.z);
+}
+/* 脚本机位必须同步 controls.target：否则 controls.update() 会把相机拽回它自己的内部状态 */
+function applyCamera(pos, dir, up, lookDist){
+  camera.up.set(0,1,0);
+  setCameraOrientation(pos, dir, up);
+  controls.target.set(pos.x+dir.x*lookDist, pos.y+dir.y*lookDist, pos.z+dir.z*lookDist);
+  controls.update();
+}
+function updateCamera(){
+  if(!spec || !spec.primary) return;
+  const cam = spec.camera;
+  const p = samplePath(spec.primary.path, playhead);
+  const p0 = samplePath(spec.primary.path, spec.shot.start);
+  const h = cam.height_m;
+  const pitch = (cam.pitch_deg + pitchAdj)*DEG;
+  const dx = p.x - p0.x, dz = p.d - p0.d;
+  let pos = {x:0, y:h, z:0};
+  let yaw = 0, pit = pitch;
+  const aimYaw = () => Math.atan2(p.x-pos.x, p.d-pos.z);
+
+  if(view === 'audience'){
+    const aud = spec.set.find(s => /audience|grandstand|观众|看台/i.test(s.cls));
+    const H = spec.primary.size[2];
+    const ax = aud ? aud.x : p.x;
+    const ad = aud ? aud.d - aud.size[1]/2 - 1.5 : p.d + 15;
+    pos = {x:ax, y:2.4, z:ad};
+    const v = {x:p.x-pos.x, y:H*.5-pos.y, z:p.d-pos.z};
+    const len = Math.hypot(v.x,v.y,v.z)||1;
+    const dir = {x:v.x/len, y:v.y/len, z:v.z/len};
+    applyCamera(pos, dir, {x:0,y:1,z:0}, len);
+    camState = {pos:{...camera.position}, dir};
+    return;
+  }
+  if(view === 'top'){
+    const b = worldBounds();
+    const span = Math.max(b.maxX-b.minX, b.maxD-b.minD) + .6;
+    const need = span/2/Math.tan(cam.fov_deg/2*DEG)*1.2;
+    pos = {x:(b.minX+b.maxX)/2, y:b.maxY+need, z:(b.minD+b.maxD)/2};
+    const dir = {x:0, y:-1, z:0};
+    applyCamera(pos, dir, {x:0,y:0,z:1}, need);
+    camState = {pos:{...camera.position}, dir};
+    return;
+  }
+  if(freeCam) return;
+
+  switch(cam.move){
+    case 'follow':
+      pos.x += dx; pos.z += dz; yaw = aimYaw(); break;
+    case 'orbit': {
+      const R = Math.hypot(p0.x, p0.d) || 6;
+      const base = Math.atan2(p0.x, p0.d);
+      const th = base + 40*DEG*((playhead - spec.shot.start)/Math.max(.001, spec.shot.end-spec.shot.start));
+      pos.x = p.x - Math.sin(th)*R; pos.z = p.d - Math.cos(th)*R;
+      yaw = aimYaw(); break;
+    }
+    case 'push_in':  pos.z += dz; break;
+    case 'pull_out': pos.z -= dz; break;
+    case 'truck':    pos.x += dx; break;
+    case 'crane':    pos.y += 0; break;
+    case 'pan':      yaw = Math.atan2(p.x-p0.x, p.d-p0.d)*.35; break;
+    case 'tilt':     pit = pitch + Math.atan2(p.d-p0.d, Math.max(.001,Math.hypot(p.x-p0.x,p.d-p0.d)))*.5; break;
+    default: break;
+  }
+  const dir = {x:Math.sin(yaw)*Math.cos(pit), y:Math.sin(pit), z:Math.cos(yaw)*Math.cos(pit)};
+  applyCamera(pos, dir, {x:0,y:1,z:0}, 3);
+  camState = {pos:{...camera.position}, dir};
+}
+
+/* ---------- 每帧更新 ---------- */
+function updateScene(){
+  if(!spec) return;
+  const prim = spec.primary;
+  spec.subjects.forEach(s => {
+    const p = samplePath(s.path, playhead);
+    if(s === prim){
+      if(figGroup){
+        const facing = p.facing !== null ? p.facing : 0;
+        figGroup.position.set(p.x, 0, p.d);
+        figGroup.rotation.y = yawOf(facing);
+      }
+    }else{
+      const grp = groups.get(s.id);
+      if(grp){ grp.position.set(p.x, 0, p.d); grp.rotation.y = yawOf(p.facing ?? 0); }
+    }
+    const tr = trails.get(s.id);
+    if(tr) updateTrailColors(s, tr, playhead);
+  });
+  if(mimic && motion && prim) applyMotion(playhead);
+  if(prim && headRing){
+    const p = samplePath(prim.path, playhead);
+    headRing.position.set(p.x, .03, p.d);
+    const span = Math.max(.5, spec.shot.end - spec.shot.start);
+    const gi = ghosts[0];
+    if(gi){
+      gi.inst.visible = true;
+      ghosts.forEach((g,i)=>{
+        const gt = playhead - (i+1)*span/26;
+        const vis = gt >= spec.shot.start;
+        g.dummy.position.set(0,-99,0);
+        g.dummy.scale.setScalar(1);
+        if(vis){
+          const gs = samplePath(prim.path, gt);
+          g.dummy.position.set(gs.x, prim.size[2]*FIG.headY, gs.d);
+          g.dummy.scale.setScalar(1 - i/ghosts.length*.75);
+        }
+        g.dummy.updateMatrix();
+        g.inst.setMatrixAt(i, g.dummy.matrix);
+        g.inst.setColorAt(i, new THREE.Color(0xffc38a).multiplyScalar(vis ? (1 - i/ghosts.length) : 0));
+      });
+      gi.inst.instanceMatrix.needsUpdate = true;
+      if(gi.inst.instanceColor) gi.inst.instanceColor.needsUpdate = true;
+    }
+  }
+  if(lightPool && prim){
+    const p = samplePath(prim.path, playhead);
+    const mx = Math.max(0, (poolOrigin?.halfW ?? 7) - 3.5), mz = Math.max(0, (poolOrigin?.halfD ?? 7) - 3.5);
+    lightPool.position.x = clamp(p.x - (poolOrigin?.x || 0), -mx, mx);
+    lightPool.position.z = clamp(p.d - (poolOrigin?.z || 0), -mz, mz);
+  }
+  eventMarks.forEach(m => { m.visible = Math.abs(playhead - m.userData.t) < .6; });
+}
+
+/* ---------- 取景比例自检 ---------- */
+function framingRatio(){
+  if(!spec || !spec.primary) return null;
+  const p = samplePath(spec.primary.path, spec.shot.start);
+  const H = spec.primary.size[2];
+  const dist = Math.hypot(p.x-camState.pos.x, p.d-camState.pos.z) || 1;
+  const halfV = camera.fov/2*DEG;
+  const frameH = 2*dist*Math.tan(halfV);
+  const hCam = camState.pos.y;
+  const angTop = Math.atan2(H-hCam, dist), angBot = Math.atan2(-hCam, dist);
+  const vis = Math.abs(angTop-angBot);
+  return {r: vis/(2*halfV), dist, frameH};
+}
+function framingBand(f){
+  if(f < .35) return 'wide';
+  if(f < .8) return 'full';
+  if(f < 1.6) return 'medium';
+  return 'close';
+}
+function updateFramingInfo(){
+  if(!spec) return;
+  const f = framingRatio();
+  if(!f) return;
+  const band = framingBand(f.r);
+  const ok = band === spec.camera.framing;
+  const el = $('#framingInfo');
+  if(!el) return;
+  const html = `取景 r=<b>${f.r.toFixed(3)}</b> → <b>${band}</b>（规格 ${spec.camera.framing}${ok?' ✓':' ≠'}）· 水平FOV ${spec.camera.fov_deg}° / 垂直 ${camera.fov.toFixed(1)}°`;
+  if(el.innerHTML !== html) el.innerHTML = html;
+}
+
+/* ---------- 小地图（schema 视向：+x 右 / +d 上） ---------- */
+function worldBounds(){
+  let minX=Infinity,maxX=-Infinity,minD=Infinity,maxD=-Infinity,maxY=0;
+  spec.subjects.forEach(s => s.path.forEach(p => {
+    minX=Math.min(minX,p.x); maxX=Math.max(maxX,p.x);
+    minD=Math.min(minD,p.d); maxD=Math.max(maxD,p.d);
+    maxY=Math.max(maxY, spec.partHeight[s.id] ?? s.size[2]/2);
+  }));
+  if(!Number.isFinite(minX)){ minX=maxX=minD=maxD=0; }
+  return {minX,maxX,minD,maxD,maxY};
+}
+function drawMinimap(){
+  if(!$('#tgMap').checked || !spec) return;
+  const W = MM_SIZE, H = MM_SIZE, pad = 14;
+  mmCtx.clearRect(0,0,W,H);
+  const b = worldBounds();
+  const spanX = Math.max(1, b.maxX-b.minX), spanD = Math.max(1, b.maxD-b.minD);
+  const s = Math.min((W-pad*2)/spanX, (H-pad*2)/spanD, 200);
+  const cx = (b.minX+b.maxX)/2, cd = (b.minD+b.maxD)/2;
+  /* 世界 x 已镜像，画布按 schema +x 向右 */
+  const toMap = (x,d) => ({px: W/2-(x-cx)*s, py: H/2-(d-cd)*s});
+  mmCtx.strokeStyle = 'rgba(255,255,255,.08)'; mmCtx.lineWidth = 1;
+  for(let i=0;i<=4;i++){
+    const gx = pad+(W-pad*2)*i/4, gy = pad+(H-pad*2)*i/4;
+    mmCtx.beginPath(); mmCtx.moveTo(gx,pad); mmCtx.lineTo(gx,H-pad); mmCtx.stroke();
+    mmCtx.beginPath(); mmCtx.moveTo(pad,gy); mmCtx.lineTo(W-pad,gy); mmCtx.stroke();
+  }
+  spec.subjects.forEach((sub,i) => {
+    if(sub.path.length < 2) return;
+    mmCtx.strokeStyle = '#'+TRAIL_COLORS[i%TRAIL_COLORS.length].toString(16).padStart(6,'0');
+    mmCtx.lineWidth = 1.6; mmCtx.globalAlpha = .85;
+    mmCtx.beginPath();
+    sub.path.forEach((p,k) => { const m = toMap(p.x,p.d); k ? mmCtx.lineTo(m.px,m.py) : mmCtx.moveTo(m.px,m.py); });
+    mmCtx.stroke(); mmCtx.globalAlpha = 1;
+  });
+  if(spec.primary){
+    const p = samplePath(spec.primary.path, playhead);
+    const m = toMap(p.x,p.d);
+    mmCtx.fillStyle = '#fff';
+    mmCtx.beginPath(); mmCtx.arc(m.px,m.py,4,0,Math.PI*2); mmCtx.fill();
+  }
+  const cam = toMap(camState.pos.x, camState.pos.z);
+  const half = spec.camera.fov_deg/2*DEG;
+  const ang = Math.atan2(-camState.dir.z, -camState.dir.x);
+  mmCtx.fillStyle = 'rgba(232,180,92,.2)';
+  mmCtx.beginPath(); mmCtx.moveTo(cam.px,cam.py);
+  mmCtx.arc(cam.px,cam.py,26,ang-half,ang+half); mmCtx.closePath(); mmCtx.fill();
+  mmCtx.fillStyle = '#e8b45c';
+  mmCtx.beginPath(); mmCtx.arc(cam.px,cam.py,3.2,0,Math.PI*2); mmCtx.fill();
+}
+
+/* ---------- 画幅 / letterbox ---------- */
+function currentAspect(){
+  if(aspectMode === '9:16') return 9/16;
+  if(aspectMode === '16:9') return 16/9;
+  if(aspectMode === 'video') return videoAspect;
+  return null;
+}
+function layoutFrame(){
+  const W = innerWidth, H = innerHeight;
+  const a = currentAspect();
+  let fw = W, fh = H;
+  if(a && isFinite(a)){ if(W/H > a) fw = H*a; else fh = W/a; }
+  const vp = $('#viewport');
+  vp.style.left = ((W-fw)/2)+'px'; vp.style.top = ((H-fh)/2)+'px';
+  vp.style.width = fw+'px'; vp.style.height = fh+'px';
+  if(renderer) renderer.setSize(fw, fh, false);
+  if(camera){
+    camera.aspect = fw/fh;
+    const hfov = spec ? spec.camera.fov_deg : 50;
+    camera.fov = 2*Math.atan(Math.tan(hfov/2*DEG)/camera.aspect)/DEG;
+    camera.updateProjectionMatrix();
+  }
+  updateFramingInfo();
+  markDirty();
+}
+
+/* ---------- 时间与播放 ---------- */
+function syncTimeUI(){
+  $('#tNow').textContent = playhead.toFixed(2);
+  $('#tDur').textContent = spec ? spec.shot.end.toFixed(2) : '0.00';
+  const sl = $('#timeSlider');
+  if(spec){ sl.min = spec.shot.start; sl.max = spec.shot.end; }
+  sl.value = playhead;
+}
+function setPlaying(v){
+  playing = v;
+  $('#playBtn').setAttribute('aria-pressed', String(v));
+  $('#playBtn').setAttribute('aria-label', v ? '暂停' : '播放');
+  $('#icoPlay').style.display = v ? 'none' : '';
+  $('#icoPause').style.display = v ? '' : 'none';
+}
+$('#playBtn').onclick = () => {
+  setPlaying(!playing);
+  if(playing){ const v=$('#vid'); if(v.src && v.readyState>=1) v.play().catch(()=>{}); }
+  markDirty();
+};
+$('#timeSlider').oninput = e => { playhead = parseFloat(e.target.value); syncTimeUI(); updateScene(); updateCamera(); syncVideo(); markDirty(); };
+$('#speedSel').onchange = e => { speed = parseFloat(e.target.value); };
+$('#pitchAdj').oninput = e => { pitchAdj = parseFloat(e.target.value); $('#pitchVal').textContent = (pitchAdj>0?'+':'')+pitchAdj.toFixed(1)+'°'; updateCamera(); updateFramingInfo(); markDirty(); };
+$('#alignBtn').onclick = () => { pitchAdj = VIDEO_PITCH_ADJ; $('#pitchAdj').value = pitchAdj; $('#pitchVal').textContent = '+'+pitchAdj+'°'; updateCamera(); updateFramingInfo(); markDirty(); };
+$('#aspectSel').onchange = e => { aspectMode = e.target.value; layoutFrame(); markDirty(); };
+$('#railBtn').onclick = () => $('#hud').classList.toggle('open');
+document.addEventListener('keydown', e => {
+  if(e.code === 'Space' && !/^(INPUT|SELECT|TEXTAREA|BUTTON)$/.test(e.target.tagName)){ e.preventDefault(); setPlaying(!playing); }
+});
+document.querySelectorAll('#viewSeg button').forEach(b => {
+  b.onclick = () => {
+    view = b.dataset.view; freeCam = false;
+    document.querySelectorAll('#viewSeg button').forEach(x => x.setAttribute('aria-pressed', String(x===b)));
+    updateCamera();
+    markDirty();
+  };
+});
+['tgTrail','tgGhost','tgSet'].forEach(id => {
+  $('#'+id).onchange = e => {
+    const on = e.target.checked;
+    if(id === 'tgTrail') trails.forEach(t => { t.line.visible = on; });
+    if(id === 'tgGhost' && ghosts[0]) ghosts[0].inst.visible = on;
+    if(id === 'tgSet' && setGroup) setGroup.visible = on;
+    markDirty();
+  };
+});
+$('#tgMap').onchange = e => {
+  $('#mapwrap').hidden = !e.target.checked;
+  $('#inspector').hidden = !e.target.checked && $('#vidwrap').hidden;
+  markDirty();
+};
+$('#tgVideo').onchange = e => {
+  $('#vidwrap').hidden = !e.target.checked;
+  $('#inspector').hidden = !e.target.checked && $('#mapwrap').hidden;
+  markDirty();
+};
+
+/* ---------- 模仿（源视频姿态驱动） ---------- */
+function setMimic(on){
+  if(on && !motion) on = false;
+  mimic = !!on;
+  const btn = $('#mimicBtn');
+  btn.setAttribute('aria-pressed', String(mimic));
+  $('#provPose').textContent = mimic ? '肢体动作逐帧模仿自源视频（MoveNet）' : '肢体姿态取自源视频帧';
+  if(!mimic) resetFigurePose();
+  updateScene();
+  markDirty();
+}
+$('#mimicBtn').onclick = () => setMimic(!mimic);
+async function tryLoadMotion(){
+  if(location.protocol === 'file:') return null;   /* file:// 下 fetch 会被 CORS 拦截 */
+  const cands = [];
+  const specBase = specName.replace(/\.json$/i,'');
+  if(specBase) cands.push(specBase+'.motion.json');
+  const vidBase = (videoName || '').replace(/\.[^.]+$/,'');
+  if(vidBase) cands.push(vidBase+'.motion.json');
+  for(const c of cands){
+    try{
+      const res = await fetch(encodeURI(c), {cache:'no-store'});
+      if(!res.ok) continue;
+      const d = await res.json();
+      if(d && Array.isArray(d.poses) && d.poses.length) return d;
+    }catch(e){}
+  }
+  return null;
+}
+function refreshMimicUI(){
+  const btn = $('#mimicBtn'), info = $('#mimicInfo');
+  if(motion){
+    btn.disabled = false;
+    const dur = Math.abs((motion.duration||0) - (spec ? spec.shot.end : 0));
+    const warn = dur > 1.5 ? ' · 时长不匹配' : '';
+    info.textContent = `${motion.poses.length} 帧 · conf ${(motion.quality||0).toFixed(2)}${warn}`;
+    info.title = warn ? `动作文件时长 ${motion.duration?.toFixed(2)}s ≠ 规格 ${spec?.shot.end?.toFixed(2)}s` : '';
+  }else{
+    btn.disabled = true;
+    const base = specName.replace(/\.json$/i,'');
+    info.textContent = `缺 ${base}.motion.json`;
+    info.title = '生成：python3 tools/extract_motion.py <视频> --spec <规格.json>';
+  }
+}
+
+/* ---------- 规格加载 ---------- */
+const fileCache = new Map();
+function addOption(sel, value, label){
+  if([...sel.options].some(o => o.value === value)) return;
+  const o = document.createElement('option');
+  o.value = value; o.textContent = label || value;
+  sel.appendChild(o);
+}
+async function fetchSpec(name){
+  if(fileCache.has(name)) return fileCache.get(name);
+  const res = await fetch(encodeURI(name), {cache:'no-store'});
+  if(!res.ok) throw new Error(`读取 ${name} 失败：HTTP ${res.status}`);
+  const raw = await res.json();
+  fileCache.set(name, raw);
+  return raw;
+}
+async function loadSpec(name, raw){
+  const data = raw || await fetchSpec(name);
+  spec = normalize(data);
+  specName = name;
+  motion = await tryLoadMotion();     /* 先取动作文件，buildFigure 按其比例重建 */
+  buildScene();
+  setMimic(!!motion);
+  refreshMimicUI();
+  layoutFrame();
+  markDirty();
+  $('#specChip').textContent = name;
+  const meta = [
+    `时长 <b>${spec.shot.end.toFixed(2)}s</b>`,
+    `主体 <b>${spec.subjects.length}</b>`,
+    `布景 <b>${spec.set.length}</b>`,
+    `move <b>${spec.camera.move}</b>`,
+    spec.events.length ? `事件 <b>${spec.events.length}</b>` : ''
+  ].filter(Boolean).join(' · ');
+  $('#meta').innerHTML = `${meta} · 主视角 <b>${spec.primary?.id ?? '—'}</b>`;
+  const evBox = $('#events');
+  evBox.textContent = '';
+  spec.events.forEach(ev => {
+    const t = Number(ev.t ?? ev.time ?? ev.start);
+    const label = ev.what || ev.label || ev.desc || ev.type || '事件';
+    const row = document.createElement('div');
+    const stamp = document.createElement('b');
+    stamp.textContent = Number.isFinite(t) ? t.toFixed(2)+'s' : '—';
+    row.appendChild(stamp);
+    row.appendChild(document.createTextNode(' '+String(label)));
+    evBox.appendChild(row);
+  });
+  window.__app.spec = spec;
+  window.__app.currentSpecName = name;
+  window.__app.ready = true;
+  setPlaying(false);
+}
+$('#specSelect').onchange = async e => {
+  const name = e.target.value;
+  if(!name) return;
+  try{ await loadSpec(name); }
+  catch(err){ showError('载入规格失败', String(err.message||err), err.stack||''); }
+};
+$('#pickBtn').onclick = () => $('#fileInput').click();
+$('#fileInput').onchange = async e => {
+  for(const f of e.target.files){
+    try{
+      const raw = JSON.parse(await f.text());
+      fileCache.set(f.name, raw);
+      addOption($('#specSelect'), f.name, `${f.name}（本地）`);
+    }catch(err){ showError('解析 JSON 失败', `${f.name}：${err.message||err}`, ''); }
+  }
+  e.target.value = '';
+  const sel = $('#specSelect');
+  if(sel.options.length > 1){
+    sel.value = sel.options[sel.options.length-1].value;
+    try{ await loadSpec(sel.value); }catch(err){ showError('载入规格失败', String(err.message||err), ''); }
+  }
+};
+$('#urlBtn').onclick = () => {
+  const v = prompt('输入 JSON 文件名或完整 URL');
+  if(!v) return;
+  const name = v.trim();
+  addOption($('#specSelect'), name, name);
+  $('#specSelect').value = name;
+  loadSpec(name).catch(err => showError('载入规格失败', String(err.message||err), err.stack||''));
+};
+
+/* ---------- 视频对照 ---------- */
+async function listMedia(){
+  if(location.protocol === 'file:') return [];
+  try{
+    const res = await fetch('/api/media', {cache:'no-store'});
+    if(!res.ok) return [];
+    const j = await res.json();
+    return Array.isArray(j) ? j : (j.media || []);
+  }catch(e){ return []; }
+}
+function setVideoSrc(name){
+  const v = $('#vid');
+  videoName = name;
+  v.src = encodeURI('/'+name);
+  v.load();
+  $('#vidHint').textContent = '时间轴与 3D 联动';
+}
+function syncVideo(){
+  const v = $('#vid');
+  if(!v.src) return;
+  if(playing){
+    if(v.paused && v.readyState >= 2) v.play().catch(()=>{});
+  }else if(!v.paused){ v.pause(); }
+  if(v.readyState >= 1 && Math.abs(v.currentTime - playhead) > .08){
+    try{ v.currentTime = Math.min(playhead, v.duration || playhead); }catch(e){}
+  }
+}
+$('#vidSel').onchange = e => { if(e.target.value) setVideoSrc(e.target.value); };
+$('#vid').addEventListener('loadedmetadata', () => {
+  const v = $('#vid');
+  videoAspect = v.videoWidth && v.videoHeight ? v.videoWidth/v.videoHeight : null;
+  if(aspectMode === 'video') layoutFrame();
+  markDirty();
+});
+$('#vid').addEventListener('play', markDirty);
+$('#vid').addEventListener('pause', markDirty);
+$('#vid').addEventListener('error', () => {
+  $('#vidHint').textContent = '视频加载失败（文件名需 URL 编码 / 需 http 服务）';
+});
+
+async function listSpecs(){
+  if(location.protocol === 'file:') return {items:[], src:null};
+  try{
+    const res = await fetch('/api/specs', {cache:'no-store'});
+    if(res.ok){
+      const j = await res.json();
+      const items = Array.isArray(j) ? j : (j.specs||[]);
+      if(items.length) return {items: items.map(x => typeof x==='string'?x:x.name), src:'目录自动枚举'};
+    }
+  }catch(e){}
+  try{
+    const res = await fetch('specs.json', {cache:'no-store'});
+    if(res.ok){
+      const j = await res.json();
+      const items = Array.isArray(j) ? j : (j.specs||[]);
+      if(items.length) return {items: items.map(x => typeof x==='string'?x:x.name), src:'specs.json 清单'};
+    }
+  }catch(e){}
+  return {items:[], src:null};
+}
+
+/* ---------- 启动 ---------- */
+async function boot(){
+  const {THREE:T, OrbitControls:OC} = await loadThree();
+  THREE = T; OrbitControls = OC;
+
+  scene = new THREE.Scene();
+  renderer = new THREE.WebGLRenderer({antialias:true, powerPreference:'high-performance'});
+  renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+  $('#viewport').appendChild(renderer.domElement);
+  camera = new THREE.PerspectiveCamera(50, 1, .05, 1200);
+  controls = new OrbitControls(camera, renderer.domElement);
+  controls.enableDamping = true;
+  controls.dampingFactor = .08;
+  controls.addEventListener('change', () => markDirty());
+  controls.addEventListener('start', () => {
+    freeCam = true;
+    document.querySelectorAll('#viewSeg button').forEach(x => x.setAttribute('aria-pressed','false'));
+    markDirty();
+  });
+
+  addEventListener('resize', () => {
+    layoutFrame();
+    sizeMinimap();
+  });
+  sizeMinimap();
+
+  mediaList = await listMedia();
+  window.__app.media = mediaList;
+  const vsel = $('#vidSel');
+  vsel.innerHTML = '';
+  const none = document.createElement('option');
+  none.value = ''; none.textContent = '— 不对照 —';
+  vsel.appendChild(none);
+  mediaList.forEach(m => addOption(vsel, m.name, m.name));
+  if(mediaList.length){
+    vsel.value = mediaList[0].name;
+    setVideoSrc(mediaList[0].name);
+    aspectMode = 'video';
+    $('#aspectSel').value = 'video';
+  }else{
+    $('#vidwrap').hidden = true;
+    $('#inspector').hidden = $('#mapwrap').hidden;
+    $('#tgVideo').checked = false;
+  }
+
+  const found = await listSpecs();
+  const sel = $('#specSelect');
+  sel.innerHTML = '';
+  const ph = document.createElement('option');
+  ph.value = ''; ph.textContent = '— 选择规格 —';
+  sel.appendChild(ph);
+  found.items.forEach(n => addOption(sel, n));
+  if(found.items.length){
+    $('#banner').textContent = `已发现 ${found.items.length} 个规格文件（${found.src}）`;
+    $('#banner').classList.remove('hidden');
+    await loadSpec(found.items[0]);
+    sel.value = found.items[0];
+  }else{
+    $('#banner').textContent = location.protocol === 'file:'
+      ? 'file 模式：无法自动枚举目录，请用「本地选择…」载入 JSON；或运行 python3 serve.py 后刷新'
+      : '未发现规格 JSON：请用「本地选择…」或「按路径载入…」';
+    $('#banner').classList.remove('hidden');
+  }
+  layoutFrame();
+  window.__app.ready = true;
+  loop();
+  setInterval(updatePerfInfo, 500);
+}
+function sizeMinimap(){
+  const dpr = Math.min(window.devicePixelRatio||1, 2);
+  mm.width = MM_SIZE*dpr; mm.height = MM_SIZE*dpr;
+  mm.style.width = MM_SIZE+'px'; mm.style.height = MM_SIZE+'px';
+  mmCtx.setTransform(dpr,0,0,dpr,0,0);
+}
+function loop(){
+  requestAnimationFrame(loop);
+  if(!loopRunning) return;
+  const now = performance.now();
+  const dt = lastTickAt ? Math.min((now-lastTickAt)/1000, 1) : 0;
+  lastTickAt = now;
+  if(playing && spec){
+    const span = Math.max(.001, spec.shot.end - spec.shot.start);
+    playhead += dt*speed;
+    if(playhead > spec.shot.end) playhead = spec.shot.start + (playhead - spec.shot.end)%span;
+    syncTimeUI();
+    dirty = true;
+  }
+  if(!dirty) return;
+  if(now - lastRenderAt < BUDGET.minFrameIntervalMs) return;
+  const prevRenderAt = lastRenderAt;
+  lastRenderAt = now;
+  const t0 = performance.now();
+  updateScene();
+  updateCamera();
+  updateFramingInfo();
+  controls.update();
+  syncVideo();
+  drawMinimap();
+  renderer.render(scene, camera);
+  const submitMs = performance.now() - t0;
+  // WebGL 提交是异步的：真实负载体现在"两次绘制之间的间隔"，而非提交耗时
+  frameMs = (prevRenderAt && now - prevRenderAt < 2000) ? (now - prevRenderAt) : submitMs;
+  submitMsLast = submitMs;
+  renderCount++;
+  dirty = false;
+  adaptQuality(frameMs);
+}
+function updatePerfInfo(){
+  const el = $('#perfInfo');
+  if(!el || !renderer) return;
+  const r = renderer.info.render;
+  const fps = frameMs > 0 ? (1000/Math.max(frameMs,.1)).toFixed(1) : '—';
+  const html = `fps <b>${fps}</b> · 帧时 <b>${frameMs.toFixed(1)}ms</b> · 画质 <b>${QUALITY_LEVELS[qualityLevel].id}</b> · 人群 <b>${crowdMesh?crowdMesh.count:0}</b> · Draw <b>${r.calls}</b> · 三角 <b>${(r.triangles/1000).toFixed(1)}k</b>`;
+  if(el.innerHTML !== html) el.innerHTML = html;
+}
+
+/* ---------- 调试钩子 ---------- */
+window.__app = {
+  ready:false, specs:[], spec:null, currentSpecName:'', media:[],
+  get playhead(){ return playhead; },
+  views:['schema','audience','top'],
+  seek(t){ playhead = t; syncTimeUI(); updateScene(); updateCamera(); syncVideo(); markDirty(); return playhead; },
+  setView(v){ view = v; freeCam = false; updateCamera(); markDirty(); },
+  setPlaying, setAspect(m){ aspectMode = m; $('#aspectSel').value = m; layoutFrame(); markDirty(); },
+  get renderCount(){ return renderCount; },
+  get quality(){ return QUALITY_LEVELS[qualityLevel].id; },
+  get frameMs(){ return frameMs; },
+  get budget(){ return {...BUDGET}; },
+  markDirty(){ dirty = true; },
+  setQuality(l){ setQuality(l); },
+  get motion(){ return motion ? {frames:motion.frames, fps:motion.fps, duration:motion.duration, quality:motion.quality, video:motion.video} : null; },
+  get mimic(){ return mimic; },
+  setMimic(b){ setMimic(b); },
+  figurePose(t){
+    const save = playhead;
+    if(Number.isFinite(t)){ playhead = t; updateScene(); updateCamera(); playhead = save; }
+    const out = {};
+    for(const n of ['hips','head','handL','handR','footL','footR']){
+      const j = figNodes.get(n);
+      if(j){ const p = new THREE.Vector3(); j.getWorldPosition(p); out[n] = [p.x,p.y,p.z]; }
+    }
+    return out;
+  },
+  figureFacing(){
+    if(!figGroup) return null;
+    const v = new THREE.Vector3(0,0,1).applyQuaternion(figGroup.getWorldQuaternion(new THREE.Quaternion()));
+    return [v.x, v.y, v.z];
+  },
+  sample(t){
+    if(!spec) return [];
+    return spec.subjects.map(s => {
+      const p = samplePath(s.path, t);
+      const mount = spec.partHeight[s.id];
+      return {id:s.id, pos:[-p.x,p.d], world:[p.x, mount===null?0:mount, p.d], facing:p.facing};
+    });
+  },
+  cameraState(){
+    const d = new THREE.Vector3(0,0,-1).applyQuaternion(camera.quaternion);
+    return {pos:{x:camera.position.x, y:camera.position.y, z:camera.position.z},
+            dir:{x:d.x, y:d.y, z:d.z}, fov:camera.fov, aspect:camera.aspect, hfov: spec?spec.camera.fov_deg:50};
+  },
+  framing(){ return framingRatio(); },
+  sceneStats(){
+    let meshes=0, lines=0, lights=0, points=0;
+    scene.traverse(o => { if(o.isMesh) meshes++; else if(o.isLine) lines++; if(o.isLight) lights++; if(o.isPoints) points++; });
+    return {meshes, lines, lights, points, figNodes:[...figNodes.keys()], memory:{...renderer.info.memory}, render:{...renderer.info.render}};
+  },
+  videoState(){
+    const v = $('#vid');
+    return {src:v.currentSrc||v.src, readyState:v.readyState, duration:v.duration, currentTime:v.currentTime, paused:v.paused, w:v.videoWidth, h:v.videoHeight};
+  },
+  get scene(){ return scene; },
+  get renderer(){ return renderer; },
+  get camera(){ return camera; },
+  get setGroup(){ return setGroup; },
+  get figGroup(){ return figGroup; },
+  setLoop(v){ loopRunning = !!v; },
+  renderNow(){ dirty = false; updateScene(); updateCamera(); controls.update(); renderer.render(scene, camera); renderCount++; },
+  snapshot(){ dirty = false; updateScene(); updateCamera(); controls.update(); renderer.render(scene, camera); renderCount++; return renderer.domElement.toDataURL('image/png'); }
+};
+
+boot().catch(err => showError('启动失败', String(err?.message||err), err?.stack||''));
+</script>
+</body>
+</html>

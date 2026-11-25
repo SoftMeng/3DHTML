@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="通用视频行为轨迹 3D 查看器：按 Fact sheet schema v1 语义还原镜头与场景，下拉选择 JSON 规格，播放并与源视频并排对照，可模仿源视频逐帧姿态。">
+<link rel="icon" href="data:,">
+<title>行为轨迹 3D 查看器</title>
+<style>
+:root{
+  --bg:#07080d;
+  --panel:rgba(14,16,23,.72);
+  --panel-2:rgba(20,23,32,.86);
+  --solid:#10131b;
+  --line:rgba(255,255,255,.08);
+  --line-2:rgba(255,255,255,.16);
+  --text:#edf0f6;
+  --dim:#98a1b3;
+  --faint:#5c6474;
+  --accent:#e8b45c;
+  --accent-ink:#1c1204;
+  --accent-soft:rgba(232,180,92,.14);
+  --cool:#7dd3fc;
+  --cool-soft:rgba(125,211,252,.13);
+  --violet:#b388ff;
+  --danger:#ff6b6b;
+  --ok:#69d58c;
+  --sp-1:4px;--sp-2:8px;--sp-3:12px;--sp-4:16px;--sp-5:24px;--sp-6:32px;
+  --r-xs:6px;--r-sm:10px;--r-md:14px;--r-lg:20px;--r-full:999px;
+  --fs-xs:10px;--fs-sm:11px;--fs-md:12.5px;--fs-lg:14px;
+  --glass:blur(22px) saturate(1.5);
+  --shadow:0 18px 50px rgba(0,0,0,.5);
+  --ease:cubic-bezier(.22,.8,.28,1);
+}
+*,*::before,*::after{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0;overflow:hidden;background:var(--bg);color:var(--text);
+  font:400 var(--fs-md)/1.55 system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+::selection{background:var(--accent-soft)}
+
+#viewport{position:absolute;inset:0;overflow:hidden;background:
+  radial-gradient(120% 90% at 50% 0%, #0b0e18 0%, #07080d 55%, #05060a 100%)}
+#viewport canvas{display:block;width:100%;height:100%;position:relative;z-index:10}
+/* 叠加对照：源视频铺在画布正后方，画布透明处即视频画面 */
+body.overlay-on #vid{position:fixed;z-index:5;object-fit:cover;background:#000;pointer-events:none}
+
+/* ---------- 玻璃面板基类 ---------- */
+.glass{
+  background:var(--panel);
+  backdrop-filter:var(--glass);
+  -webkit-backdrop-filter:var(--glass);
+  border:1px solid var(--line);
+  box-shadow:var(--shadow);
+}
+
+/* ---------- 顶栏 ---------- */
+#topbar{
+  position:fixed;top:var(--sp-3);left:50%;transform:translateX(-50%);
+  z-index:30;display:flex;align-items:center;gap:var(--sp-3);
+  height:52px;padding:0 var(--sp-3) 0 var(--sp-4);
+  border-radius:var(--r-full);min-width:0;
+}
+.brand{display:flex;align-items:center;gap:var(--sp-3);min-width:0}
+.brand-mark{
+  width:28px;height:28px;border-radius:9px;flex:none;
+  background:linear-gradient(135deg,#f2ca88,#c98f3a);
+  display:grid;place-items:center;color:#231604;
+}
+.brand-text{display:flex;flex-direction:column;line-height:1.15;min-width:0;margin:0}
+.brand-text b{
+  font:600 14px/1.2 ui-serif,Georgia,"Songti SC",serif;letter-spacing:.02em;white-space:nowrap;
+}
+.brand-text span{
+  font-size:var(--fs-xs);color:var(--faint);letter-spacing:.16em;text-transform:uppercase;white-space:nowrap;
+}
+.spec-chip{
+  display:inline-flex;align-items:center;gap:var(--sp-2);
+  height:30px;padding:0 var(--sp-3);border-radius:var(--r-full);
+  background:var(--cool-soft);border:1px solid rgba(125,211,252,.25);
+  color:var(--cool);font-size:var(--fs-sm);max-width:220px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.spec-chip::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--cool);flex:none}
+.top-spacer{flex:1}
+#perfInfo{
+  font-size:var(--fs-sm);color:var(--dim);white-space:nowrap;
+  font-variant-numeric:tabular-nums;padding:6px var(--sp-3);border-radius:var(--r-full);
+  background:rgba(255,255,255,.04);border:1px solid var(--line);
+}
+#perfInfo b{color:var(--text);font-weight:600}
+#railBtn{display:none}
+
+/* ---------- 左轨 ---------- */
+#hud{
+  position:fixed;top:84px;left:var(--sp-3);bottom:100px;z-index:20;
+  width:296px;border-radius:var(--r-lg);padding:var(--sp-2);
+  overflow:auto;overscroll-behavior:contain;
+  scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.14) transparent;
+}
+#hud::-webkit-scrollbar{width:4px}
+#hud::-webkit-scrollbar-thumb{background:rgba(255,255,255,.14);border-radius:4px}
+#hud section{padding:var(--sp-3) var(--sp-2) var(--sp-4);border-bottom:1px solid var(--line)}
+#hud section:last-child{border-bottom:none}
+#hud h2{
+  margin:0 0 var(--sp-3);font-size:var(--fs-xs);font-weight:600;color:var(--faint);
+  letter-spacing:.18em;text-transform:uppercase;display:flex;align-items:center;gap:var(--sp-2);
+}
+#hud h2::after{content:"";flex:1;height:1px;background:var(--line)}
+label.field{display:block;font-size:var(--fs-sm);color:var(--dim);margin-bottom:var(--sp-3)}
+select,input[type=text]{
+  width:100%;margin-top:var(--sp-1);padding:8px var(--sp-2);
+  font:inherit;font-size:var(--fs-md);color:var(--text);
+  background:var(--solid);border:1px solid var(--line);border-radius:var(--r-xs);
+  appearance:none;
+}
+select:focus-visible,input:focus-visible,button:focus-visible,summary:focus-visible,[tabindex]:focus-visible{
+  outline:2px solid var(--accent);outline-offset:2px;
+}
+.btn-row{display:flex;gap:var(--sp-2)}
+button{
+  font:inherit;font-size:var(--fs-md);color:var(--text);cursor:pointer;
+  background:var(--solid);border:1px solid var(--line);border-radius:var(--r-xs);
+  padding:8px var(--sp-3);white-space:nowrap;transition:border-color .15s var(--ease),background .15s var(--ease),transform .12s var(--ease);
+}
+button:hover{border-color:var(--line-2);background:rgba(255,255,255,.06)}
+button:active{transform:translateY(1px)}
+button.ghost{background:transparent}
+.meta{margin:var(--sp-2) 0 0;font-size:var(--fs-sm);color:var(--dim);line-height:1.75}
+.meta b{color:var(--text);font-weight:600}
+
+.seg{display:flex;gap:var(--sp-1);padding:var(--sp-1);background:rgba(0,0,0,.28);border-radius:var(--r-sm)}
+.seg button{flex:1;border:none;background:transparent;color:var(--dim);border-radius:var(--r-xs);padding:8px 2px;font-size:var(--fs-sm)}
+.seg button[aria-pressed="true"]{background:var(--panel-2);color:var(--text);box-shadow:0 1px 8px rgba(0,0,0,.35),inset 0 0 0 1px var(--line-2)}
+
+input[type=range]{width:100%;accent-color:var(--accent);cursor:pointer}
+
+.chips{display:flex;flex-wrap:wrap;gap:var(--sp-2)}
+.chip{
+  display:inline-flex;align-items:center;gap:8px;height:28px;padding:0 var(--sp-3);
+  border-radius:var(--r-full);border:1px solid var(--line);
+  background:rgba(255,255,255,.03);color:var(--dim);font-size:var(--fs-sm);
+  cursor:pointer;user-select:none;transition:all .15s var(--ease);
+}
+.chip::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--faint);transition:background .15s}
+.chip:has(input:checked){color:var(--text);border-color:rgba(232,180,92,.4);background:var(--accent-soft)}
+.chip:has(input:checked)::before{background:var(--accent)}
+.chip input{position:absolute;opacity:0;pointer-events:none}
+
+.provenance{font-size:var(--fs-sm);color:var(--dim);line-height:1.8}
+.provenance b{color:var(--violet);font-weight:600}
+#events{font-size:var(--fs-sm);color:var(--dim);max-height:130px;overflow:auto}
+#events div{margin-top:var(--sp-1)}
+#events b{color:var(--accent);font-weight:600;font-variant-numeric:tabular-nums}
+
+/* ---------- 右检查器 ---------- */
+#inspector{
+  position:fixed;top:84px;right:var(--sp-3);z-index:20;width:264px;
+  border-radius:var(--r-lg);padding:var(--sp-2);display:flex;flex-direction:column;gap:var(--sp-2);
+  max-height:calc(100vh - 190px);
+}
+#inspector section{padding:var(--sp-2);border-radius:var(--r-md);background:rgba(0,0,0,.22);border:1px solid var(--line)}
+#inspector[hidden]{display:none}
+.vhead{
+  display:flex;align-items:center;gap:8px;margin:0 0 var(--sp-2);
+  font-size:var(--fs-xs);font-weight:600;color:var(--faint);
+  letter-spacing:.16em;text-transform:uppercase;
+}
+.live-dot{width:6px;height:6px;border-radius:50%;background:var(--ok);box-shadow:0 0 8px var(--ok)}
+#vidwrap[hidden]{display:none}
+#vid{
+  width:100%;max-height:40vh;object-fit:contain;border-radius:var(--r-sm);
+  background:#000;display:block;
+}
+#vidSel{margin-top:var(--sp-2)}
+.vhint{font-size:var(--fs-sm);color:var(--faint);margin:var(--sp-2) 0 0}
+#mapwrap[hidden]{display:none}
+#minimap{width:100%;aspect-ratio:1;border-radius:var(--r-sm);background:rgba(0,0,0,.35);border:1px solid var(--line);display:block}
+
+/* ---------- 走带控制 ---------- */
+#transport{
+  position:fixed;left:50%;bottom:var(--sp-4);transform:translateX(-50%);z-index:30;
+  display:flex;align-items:center;gap:var(--sp-3);
+  min-width:min(920px,calc(100vw - 48px));max-width:calc(100vw - 32px);
+  height:72px;padding:0 var(--sp-4);border-radius:var(--r-lg);
+}
+#playBtn{
+  width:46px;height:46px;border-radius:50%;flex:none;
+  background:linear-gradient(160deg,#f4cd8b,#d9a049);color:var(--accent-ink);
+  border:none;display:grid;place-items:center;
+  box-shadow:0 6px 22px rgba(232,180,92,.32),inset 0 1px 0 rgba(255,255,255,.5);
+  transition:transform .15s var(--ease),box-shadow .15s var(--ease);
+}
+#playBtn:hover{transform:scale(1.05);box-shadow:0 8px 28px rgba(232,180,92,.45),inset 0 1px 0 rgba(255,255,255,.5)}
+#playBtn:active{transform:scale(.97)}
+#playBtn svg{width:18px;height:18px}
+.time{
+  display:flex;align-items:baseline;gap:4px;flex:none;
+  font-variant-numeric:tabular-nums;font-size:var(--fs-sm);color:var(--faint);
+}
+.time b{font-size:var(--fs-lg);color:var(--text);font-weight:600;min-width:44px;text-align:right}
+#timeSlider{flex:1;min-width:120px;height:22px}
+#speedSel{width:76px;flex:none;margin-top:0}
+.tp-div{width:1px;height:36px;background:var(--line);flex:none}
+#recBtn{display:inline-flex;align-items:center;gap:var(--sp-1);padding:6px var(--sp-2)}
+#recBtn .rec-dot{width:8px;height:8px;border-radius:50%;background:#e2585f;box-shadow:0 0 0 2px rgba(226,88,95,.18)}
+#recBtn[aria-pressed="true"]{border-color:rgba(226,88,95,.55);color:#ffb3b6}
+#recBtn[aria-pressed="true"] .rec-dot{background:#ff4d55;animation:recPulse 1s ease-in-out infinite}
+@keyframes recPulse{0%,100%{box-shadow:0 0 0 2px rgba(226,88,95,.18)}50%{box-shadow:0 0 0 5px rgba(226,88,95,.05)}}
+#mimicBtn{
+  flex:none;display:inline-flex;align-items:center;gap:8px;height:38px;padding:0 var(--sp-4);
+  border-radius:var(--r-full);font-size:var(--fs-md);color:var(--dim);
+  border:1px solid var(--line);background:rgba(255,255,255,.03);
+}
+#mimicBtn::before{
+  content:"";width:8px;height:8px;border-radius:50%;
+  background:var(--faint);box-shadow:none;transition:all .18s var(--ease);
+}
+#mimicBtn[aria-pressed="true"]{
+  color:var(--accent);border-color:rgba(232,180,92,.5);background:var(--accent-soft);
+}
+#mimicBtn[aria-pressed="true"]::before{background:var(--accent);box-shadow:0 0 10px var(--accent)}
+#mimicBtn:disabled{opacity:.45;cursor:not-allowed}
+#mimicBtn .m-arrow{display:none}
+#mimicInfo{flex:none;font-size:var(--fs-sm);color:var(--faint);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* ---------- 取景信息浮签 ---------- */
+#framingInfo{
+  position:fixed;top:84px;left:50%;transform:translateX(-50%);z-index:15;
+  margin:0;padding:6px var(--sp-4);border-radius:var(--r-full);
+  font-size:var(--fs-sm);color:var(--dim);background:var(--panel);
+  backdrop-filter:var(--glass);-webkit-backdrop-filter:var(--glass);
+  border:1px solid var(--line);white-space:nowrap;
+  font-variant-numeric:tabular-nums;
+}
+#framingInfo b{color:var(--text);font-weight:600}
+#framingInfo:empty{display:none}
+
+/* ---------- 横幅与错误 ---------- */
+#banner{
+  position:fixed;left:50%;bottom:104px;transform:translateX(-50%);z-index:25;
+  padding:7px var(--sp-4);font-size:var(--fs-sm);color:var(--dim);
+  background:var(--panel);backdrop-filter:var(--glass);-webkit-backdrop-filter:var(--glass);
+  border:1px solid var(--line);border-radius:var(--r-full);margin:0;max-width:min(720px,90vw);
+  text-align:center;
+}
+#banner.hidden{display:none}
+
+#err{position:fixed;inset:0;display:grid;place-items:center;background:rgba(4,6,10,.78);z-index:60}
+#err[hidden]{display:none}
+.err-card{width:min(560px,92vw);padding:var(--sp-5);background:var(--solid);border:1px solid var(--danger);border-radius:var(--r-lg);box-shadow:var(--shadow)}
+.err-card h2{margin:0 0 var(--sp-3);font-size:var(--fs-lg);color:var(--danger)}
+.err-card p{margin:0 0 var(--sp-3);font-size:var(--fs-md);white-space:pre-wrap}
+.err-card details{margin-bottom:var(--sp-4);font-size:var(--fs-sm);color:var(--dim)}
+.err-card pre{overflow:auto;max-height:180px;padding:var(--sp-2);background:rgba(0,0,0,.4);border-radius:var(--r-xs);white-space:pre-wrap}
+.err-card .btn-row{justify-content:flex-end}
+
+/* ---------- 响应式 ---------- */
+@media (max-width:1180px){
+  #mimicInfo{display:none}
+}
+@media (max-width:960px){
+  #inspector{display:none}
+  #topbar{left:var(--sp-3);transform:none;width:calc(100vw - 24px)}
+  .top-spacer{flex:1}
+  #railBtn{display:grid}
+  #hud{
+    top:76px;left:0;bottom:0;width:min(320px,86vw);
+    border-radius:0 var(--r-lg) var(--r-lg) 0;
+    transform:translateX(-102%);transition:transform .26s var(--ease);
+    background:var(--panel-2);backdrop-filter:var(--glass);-webkit-backdrop-filter:var(--glass);
+  }
+  #hud.open{transform:none}
+  #transport{min-width:calc(100vw - 24px);gap:var(--sp-2);padding:0 var(--sp-3);height:64px}
+  #mimicBtn{padding:0 var(--sp-3)}
+  #mimicBtn .m-label{display:none}
+  #mimicBtn .m-arrow{display:inline}
+  .time span:nth-child(2),.time span:nth-child(3),.time span:nth-child(4){display:none}
+  #framingInfo{display:none}
+}
+.icon-btn{
+  width:34px;height:34px;border-radius:var(--r-sm);display:grid;place-items:center;
+  background:rgba(255,255,255,.05);border:1px solid var(--line);color:var(--dim);padding:0;
+}
+</style>
+<script>
+  window.__CDN = new URLSearchParams(location.search).get('cdn') === 'unpkg'
+    ? {three:'https://unpkg.com/three@0.164.1/build/three.module.js',addons:'https://unpkg.com/three@0.164.1/examples/jsm/'}
+    : {three:'https://cdn.jsdelivr.net/npm/three@0.164.1/build/three.module.js',addons:'https://cdn.jsdelivr.net/npm/three@0.164.1/examples/jsm/'};
+  document.write('<scr'+'ipt type="importmap">'+JSON.stringify({imports:{three:window.__CDN.three,'three/addons/':window.__CDN.addons}})+'</scr'+'ipt>');
+</script>
+</head>
+<body>
+<main id="viewport" aria-label="3D 轨迹视口"></main>
+
+<header id="topbar" class="glass" aria-label="顶栏">
+  <div class="brand">
+    <span class="brand-mark" aria-hidden="true">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20c4-1 6-4 6-9l3-7 2 3 4 1-3 3c0 6-4 9-12 9z"/></svg>
+    </span>
+    <h1 class="brand-text"><b>行为轨迹 3D</b><span>Trajectory Viewer</span></h1>
+  </div>
+  <span class="spec-chip" id="specChip">未载入</span>
+  <span class="top-spacer"></span>
+  <span id="perfInfo">—</span>
+  <button id="railBtn" class="icon-btn" aria-label="打开控制面板">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h10"/></svg>
+  </button>
+</header>
+
+<aside id="hud" class="glass rail" aria-label="控制面板">
+  <section>
+    <h2>数据</h2>
+    <label class="field" for="specSelect">规格 JSON
+      <select id="specSelect" aria-label="选择规格文件"></select>
+    </label>
+    <div class="btn-row">
+      <button id="pickBtn" title="从本地选择 JSON 文件">本地选择…</button>
+      <button id="urlBtn" class="ghost" title="按文件名或 URL 载入">按路径载入…</button>
+    </div>
+    <input type="file" id="fileInput" accept=".json,application/json" multiple hidden>
+    <p class="meta" id="meta">尚未载入规格</p>
+  </section>
+
+  <section>
+    <h2>镜头</h2>
+    <label class="field">视角</label>
+    <div class="seg" id="viewSeg" role="group" aria-label="镜头视角">
+      <button data-view="schema" aria-pressed="true">规格机位</button>
+      <button data-view="match" aria-pressed="false">对照机位</button>
+      <button data-view="overlay" aria-pressed="false">叠加对照</button>
+      <button data-view="audience" aria-pressed="false">观众席</button>
+      <button data-view="close" aria-pressed="false">近景</button>
+      <button data-view="top" aria-pressed="false">俯视</button>
+    </div>
+    <label class="field" for="aspectSel" style="margin-top:var(--sp-3)">画幅（决定 framing 比例）
+      <select id="aspectSel" aria-label="画幅">
+        <option value="viewport">视口</option>
+        <option value="9:16">9:16 竖屏</option>
+        <option value="16:9">16:9 横屏</option>
+        <option value="video">匹配源视频</option>
+      </select>
+    </label>
+    <label class="field" for="pitchAdj">俯仰微调 <span id="pitchVal">0°</span></label>
+    <input type="range" id="pitchAdj" min="-20" max="20" step="0.5" value="0" aria-label="俯仰微调">
+    <div class="btn-row" style="margin-top:var(--sp-3)">
+      <button id="alignBtn" class="ghost" title="按源视频测得的画面轴向对齐">对齐视频构图</button>
+    </div>
+  </section>
+
+  <section>
+    <h2>图层</h2>
+    <div class="chips">
+      <label class="chip"><input type="checkbox" id="tgTrail" checked>轨迹</label>
+      <label class="chip"><input type="checkbox" id="tgGhost" checked>残影</label>
+      <label class="chip"><input type="checkbox" id="tgSet" checked>布景</label>
+      <label class="chip"><input type="checkbox" id="tgMap" checked>小地图</label>
+      <label class="chip"><input type="checkbox" id="tgVideo" checked>视频对照</label>
+    </div>
+  </section>
+
+  <section>
+    <h2>数据归属</h2>
+    <p class="provenance" id="provText">
+      环境与轨迹来自 JSON（schema v1）；<b id="provPose">肢体姿态取自源视频帧</b>。
+    </p>
+  </section>
+
+  <section>
+    <h2>事件</h2>
+    <div id="events"></div>
+  </section>
+</aside>
+
+<aside id="inspector" class="glass" aria-label="对照面板">
+  <section id="vidwrap" aria-label="源视频对照">
+    <div class="vhead"><span class="live-dot"></span>源视频对照</div>
+    <video id="vid" controls playsinline preload="auto"></video>
+    <select id="vidSel" aria-label="源视频"></select>
+    <p class="vhint" id="vidHint">时间轴与 3D 联动</p>
+    <input type="file" id="vidInput" accept="video/*" hidden>
+  </section>
+  <section id="mapwrap" aria-label="轨迹小地图">
+    <div class="vhead">轨迹俯视图 · x / d</div>
+    <canvas id="minimap"></canvas>
+  </section>
+</aside>
+
+<p id="framingInfo" aria-live="off"></p>
+
+<footer id="transport" class="glass" aria-label="播放控制">
+  <button id="playBtn" class="primary" aria-pressed="false" aria-label="播放">
+    <svg id="icoPlay" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.5v13l11-6.5z"/></svg>
+    <svg id="icoPause" viewBox="0 0 24 24" fill="currentColor" style="display:none"><path d="M7 5h3.4v14H7zM13.6 5H17v14h-3.4z"/></svg>
+  </button>
+  <span class="time"><b id="tNow">0.00</b><span>/</span><span id="tDur">0.00</span><span>s</span></span>
+  <input type="range" id="timeSlider" min="0" max="1" step="0.01" value="0" aria-label="时间轴">
+  <select id="speedSel" aria-label="倍速">
+    <option value="0.5">0.5×</option><option value="1" selected>1×</option><option value="2">2×</option>
+  </select>
+  <span class="tp-div"></span>
+  <button id="recBtn" class="ghost" aria-pressed="false" title="把当前画面录成 webm（叠加对照模式下即为「视频+3D」对比片）">
+    <span class="rec-dot"></span><span class="rec-label">录制</span>
+  </button>
+  <button id="mimicBtn" aria-pressed="false" title="用源视频逐帧姿态驱动 3D 人偶">
+    <span class="m-arrow">◎</span><span class="m-label">模仿源视频动作</span>
+  </button>
+  <span id="mimicInfo"></span>
+</footer>
+
+<p id="banner" class="hidden"></p>
+
+<div id="err" hidden role="alert">
+  <div class="err-card">
+    <h2 id="errTitle">出错了</h2>
+    <p id="errMsg"></p>
+    <details><summary>技术细节</summary><pre id="errDetail"></pre></details>
+    <div class="btn-row">
+      <button id="errAlt">换备用 CDN 重试</button>
+      <button id="errRetry" class="primary">重试</button>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+/*@BUNDLE@*/
+</script>
+</body>
+</html>
