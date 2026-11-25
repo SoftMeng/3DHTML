@@ -16,6 +16,14 @@ node tools/test_core.mjs            # 几何内核单测（秒级，不开浏览
 node tools/verify.mjs              # 有界验收（48 断言，单浏览器实例 ~70s，跑完即 kill）
 ```
 
+**首次使用（从克隆到可跑）**：
+
+```bash
+python3 -m venv tools/.venv && tools/.venv/bin/pip install -r tools/requirements.txt
+# 提取管线需要 MediaPipe 权重，首次运行 tools/extract_motion.py 会自动下载到 tools/models/
+tools/.venv/bin/python tools/extract_motion.py 从该原始视频中提取到的JSON.mp4 --spec 示例.json --backend mp
+```
+
 ---
 
 ## 1. 数据契约
